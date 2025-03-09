@@ -42,6 +42,8 @@ IoT node (Core Module) →→MQTT→→ Gateway (Radio Dongle) →→HTTP→→ 
 
 ### 🎨 Design
 
+**Termíny pro jednotlivé milníky jsou vždy v pátky, protože v sobotu probíhají konzultace.**
+
 | **Code** | **Description** | **Termín** |
 |----------|---------------------------------------------------------------|----------|
 | M1       | Business Requests ⇒ Popsání klíčových User Stories             | 21.3.    |
