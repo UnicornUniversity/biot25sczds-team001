@@ -11,6 +11,8 @@ const app = express();
 app.use(express.json());
 
 // Routes
+app.use("/", require("./routes/authRoutes"));
+app.use("/", require("./routes/testRoutes"));
 app.use("/", require("./routes/objektRoutes"));
 app.use("/", require("./routes/dvereRoutes"));
 app.use("/", require("./routes/iotNodeRoutes"));
