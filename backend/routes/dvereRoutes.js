@@ -2,6 +2,7 @@
 const router = express.Router();
 const dvereDao = require("../dao/dvereDao");
 const validate = require("../middleware/validate");
+const authenticateToken = require("../middleware/authTokenValidation");
 const Joi = require("joi");
 
 // Validation schemas
@@ -26,7 +27,7 @@ const deleteDoorSchema = Joi.object({
 
 // TODO: update based on FE needs
 // GET /object/:objectId/door - List doors for a specific object
-router.get("/object/:objectId/door", async (req, res) => {
+router.get("/object/:objectId/door", authenticateToken, async (req, res) => {
     try {
         const {objectId} = req.params;
         const {page = 1, pageSize = 10} = req.query;
@@ -43,7 +44,7 @@ router.get("/object/:objectId/door", async (req, res) => {
 });
 
 // POST /door/create - Create a new door
-router.post("/door/create", validate(createDoorSchema), async (req, res) => {
+router.post("/door/create", validate(createDoorSchema), authenticateToken, async (req, res) => {
     try {
         const door = await dvereDao.create(req.body);
         res.status(201).json({
@@ -57,7 +58,7 @@ router.post("/door/create", validate(createDoorSchema), async (req, res) => {
 });
 
 // PUT /door/update - Update an existing door
-router.put("/door/update", validate(updateDoorSchema), async (req, res) => {
+router.put("/door/update", validate(updateDoorSchema), authenticateToken, async (req, res) => {
     try {
         const door = await dvereDao.update(req.body);
         if (!door) {
@@ -74,7 +75,7 @@ router.put("/door/update", validate(updateDoorSchema), async (req, res) => {
 });
 
 // DELETE /door/delete - Delete a door
-router.delete("/door/delete", validate(deleteDoorSchema), async (req, res) => {
+router.delete("/door/delete", validate(deleteDoorSchema), authenticateToken, async (req, res) => {
     try {
         const {id} = req.body;
         if (!id) {

@@ -2,6 +2,7 @@
 const router = express.Router();
 const logDao = require("../dao/logDao");
 const validate = require("../middleware/validate");
+const authenticateToken = require("../middleware/authTokenValidation");
 const Joi = require("joi");
 
 // Validation schemas
@@ -12,7 +13,7 @@ const createLogSchema = Joi.object({
 });
 
 // GET /logs - List all logs
-router.get("/logs", async (req, res) => {
+router.get("/logs", authenticateToken, async (req, res) => {
     try {
         const {page = 1, pageSize = 10, relatedDoor, severity} = req.query;
         const pageInfo = {
@@ -29,7 +30,7 @@ router.get("/logs", async (req, res) => {
 });
 
 // POST /log/create - Create a new log
-router.post("/log/create", validate(createLogSchema), async (req, res) => {
+router.post("/log/create", validate(createLogSchema), authenticateToken, async (req, res) => {
     try {
         const log = await logDao.create(req.body);
         res.status(201).json({

@@ -2,6 +2,7 @@
 const router = express.Router();
 const objektDao = require("../dao/objektDao");
 const validate = require("../middleware/validate");
+const authenticateToken = require("../middleware/authTokenValidation");
 const Joi = require("joi");
 
 // Validation schemas
@@ -23,7 +24,7 @@ const deleteObjectSchema = Joi.object({
 });
 
 // GET /object - List objects with optional filtering
-router.get("/object", async (req, res) => {
+router.get("/object", authenticateToken, async (req, res) => {
     try {
         const {page = 1, pageSize = 10, ownerId} = req.query;
         const pageInfo = {
@@ -39,7 +40,7 @@ router.get("/object", async (req, res) => {
 });
 
 // POST /object/create - Create a new object
-router.post("/object/create", validate(createObjectSchema), async (req, res) => {
+router.post("/object/create", validate(createObjectSchema), authenticateToken, async (req, res) => {
     try {
         const objekt = await objektDao.create(req.body);
         res.status(201).json({
@@ -53,7 +54,7 @@ router.post("/object/create", validate(createObjectSchema), async (req, res) => 
 });
 
 // PUT /object/update - Update an existing object
-router.put("/object/update", validate(updateObjectSchema), async (req, res) => {
+router.put("/object/update", validate(updateObjectSchema), authenticateToken, async (req, res) => {
     try {
         const objekt = await objektDao.update(req.body);
         if (!objekt) {
@@ -70,7 +71,7 @@ router.put("/object/update", validate(updateObjectSchema), async (req, res) => {
 });
 
 // DELETE /object/delete - Delete an object
-router.delete("/object/delete", validate(deleteObjectSchema), async (req, res) => {
+router.delete("/object/delete", validate(deleteObjectSchema), authenticateToken, async (req, res) => {
     try {
         const {id} = req.body;
         if (!id) {
