@@ -42,6 +42,19 @@ const deviceDao = {
     deleteById: async (_id) => {
         return await Device.findByIdAndDelete(_id);
     },
+
+    getAvailableControllers: async (gatewayId) => {
+        const query = {
+            created: true,
+            doorId: null,
+        };
+
+        if (gatewayId) {
+            query.gatewayId = gatewayId;
+        }
+
+        return await Device.find(query);
+    },
 };
 
 module.exports = deviceDao;

@@ -22,6 +22,17 @@ const updateSchema = Joi.object({
     created: Joi.boolean(),
 }).min(1);
 
+// GET /devices/available-controllers?gatewayId=gw001
+router.get("/devices/available-controllers", authenticateToken, async (req, res) => {
+    try {
+        const {gatewayId} = req.query;
+        const result = await deviceDao.getAvailableControllers(gatewayId);
+        res.json({message: "Available controllers fetched", data: result});
+    } catch (err) {
+        res.status(500).json({message: err.message});
+    }
+});
+
 // GET /devices?gatewayId=...&created=true
 router.get("/devices", authenticateToken, async (req, res) => {
     try {
