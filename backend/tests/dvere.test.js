@@ -1,7 +1,7 @@
 ﻿const request = require('supertest');
 const app = require('./testServer');
-const Objekt = require('../models/Objekt');
-const Dvere = require('../models/Dvere');
+const Objekt = require('../models/Building');
+const Dvere = require('../models/Door');
 require('./setup');
 
 describe('Door Endpoints', () => {

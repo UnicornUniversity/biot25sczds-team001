@@ -8,15 +8,15 @@ app.use(express.json());
 const validate = require('../middleware/validate');
 
 // Import models
-const Objekt = require('../models/Objekt');
-const Dvere = require('../models/Dvere');
-const IotNode = require('../models/IotNode');
+const Objekt = require('../models/Building');
+const Dvere = require('../models/Door');
+const IotNode = require('../models/Device');
 const Log = require('../models/Log');
 
 // Import DAOs
-const objektDao = require('../dao/objektDao');
-const dvereDao = require('../dao/dvereDao');
-const iotNodeDao = require('../dao/iotNodeDao');
+const objektDao = require('../dao/buildingDao');
+const dvereDao = require('../dao/doorDao');
+const iotNodeDao = require('../dao/deviceDao');
 const logDao = require('../dao/logDao');
 
 // Validation schemas

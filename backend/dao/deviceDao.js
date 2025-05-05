@@ -1,22 +1,22 @@
-﻿const Log = require("../models/Log");
+﻿const Device = require("../models/Device");
 
-const logDao = {
+const deviceDao = {
     create: async (uuObject) => {
-        return await new Log(uuObject).save();
+        return await new Device(uuObject).save();
     },
 
     get: async (filter) => {
-        return await Log.findOne(filter);
+        return await Device.findOne(filter);
     },
 
-    list: async ({page = 1, pageSize = 10, doorId, severity}) => {
+    list: async ({page = 1, pageSize = 10, doorId, gatewayId}) => {
         const skip = (page - 1) * pageSize;
         const query = {};
         if (doorId) query.doorId = doorId;
-        if (severity) query.severity = severity;
+        if (gatewayId) query.gatewayId = gatewayId;
 
-        const itemList = await Log.find(query).sort({createdAt: -1}).skip(skip).limit(pageSize);
-        const total = await Log.countDocuments(query);
+        const itemList = await Device.find(query).skip(skip).limit(pageSize);
+        const total = await Device.countDocuments(query);
 
         return {
             itemList,
@@ -33,12 +33,12 @@ const logDao = {
         const {_id, ...updateData} = object;
         updateData.updatedAt = new Date();
 
-        return await Log.findByIdAndUpdate(_id, updateData, {new: true});
+        return await Device.findByIdAndUpdate(_id, updateData, {new: true});
     },
 
     delete: async (_id) => {
-        return await Log.findByIdAndDelete(_id);
+        return await Device.findByIdAndDelete(_id);
     },
 };
 
-module.exports = logDao;
+module.exports = deviceDao;

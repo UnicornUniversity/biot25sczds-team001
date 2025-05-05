@@ -1,12 +1,10 @@
 ﻿const mongoose = require("mongoose");
-const {v4: uuidv4} = require("uuid");
 
 const objektSchema = new mongoose.Schema(
     {
-        id: {
+        _id: {
             type: String,
-            default: uuidv4,
-            unique: true,
+            required: true,
         },
         name: {
             type: String,
@@ -14,24 +12,26 @@ const objektSchema = new mongoose.Schema(
         },
         description: {
             type: String,
-            required: true,
+            default: null,
         },
         ownerId: {
             type: String,
             required: true,
+            ref: "User",
         },
         createdAt: {
             type: Date,
             default: Date.now,
         },
-        updateAt: {
+        updatedAt: {
             type: Date,
             default: Date.now,
         },
     },
     {
-        timestamps: {createdAt: "createdAt", updatedAt: "updateAt"},
+        _id: false,
+        timestamps: {createdAt: "createdAt", updatedAt: "updatedAt"},
     }
 );
 
-module.exports = mongoose.model("Objekt", objektSchema);
+module.exports = mongoose.model("Building", objektSchema);

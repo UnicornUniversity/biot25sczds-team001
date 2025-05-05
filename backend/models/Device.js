@@ -1,17 +1,20 @@
 ﻿const mongoose = require("mongoose");
-const {v4: uuidv4} = require("uuid");
 
 const iotNodeSchema = new mongoose.Schema(
     {
-        id: {
+        _id: {
             type: String,
-            default: uuidv4,
-            unique: true,
+            required: true,
+        },
+        gatewayId: {
+            type: String,
+            required: true,
+            ref: "Gateway",
         },
         doorId: {
             type: String,
-            required: true,
-            ref: "Dvere",
+            ref: "Door",
+            default: null,
         },
         name: {
             type: String,
@@ -19,20 +22,25 @@ const iotNodeSchema = new mongoose.Schema(
         },
         description: {
             type: String,
-            default: "",
+            default: null,
+        },
+        created: {
+            type: Boolean,
+            required: true,
         },
         createdAt: {
             type: Date,
             default: Date.now,
         },
-        updateAt: {
+        updatedAt: {
             type: Date,
             default: Date.now,
         },
     },
     {
-        timestamps: {createdAt: "createdAt", updatedAt: "updateAt"},
+        _id: false,
+        timestamps: {createdAt: "createdAt", updatedAt: "updatedAt"},
     }
 );
 
-module.exports = mongoose.model("IotNode", iotNodeSchema);
+module.exports = mongoose.model("Device", iotNodeSchema);

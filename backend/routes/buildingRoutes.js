@@ -1,87 +1,83 @@
 ﻿const express = require("express");
 const router = express.Router();
-const dvereDao = require("../dao/dvereDao");
+const objektDao = require("../dao/buildingDao");
 const validate = require("../middleware/validate");
 const authenticateToken = require("../middleware/authTokenValidation");
 const Joi = require("joi");
 
 // Validation schemas
-const createDoorSchema = Joi.object({
-    objectId: Joi.string().required(),
+const createObjectSchema = Joi.object({
     name: Joi.string().required(),
     description: Joi.string().required(),
-    locked: Joi.boolean().default(true),
+    ownerId: Joi.string().required(),
 });
 
-const updateDoorSchema = Joi.object({
+const updateObjectSchema = Joi.object({
     id: Joi.string().required(),
-    objectId: Joi.string(),
     name: Joi.string(),
     description: Joi.string(),
-    locked: Joi.boolean(),
+    ownerId: Joi.string(),
 }).min(2); // At least id and one field to update
 
-const deleteDoorSchema = Joi.object({
+const deleteObjectSchema = Joi.object({
     id: Joi.string().required(),
 });
 
-// TODO: update based on FE needs
-// GET /object/:objectId/door - List doors for a specific object
-router.get("/object/:objectId/door", authenticateToken, async (req, res) => {
+// GET /object - List objects with optional filtering
+router.get("/object", authenticateToken, async (req, res) => {
     try {
-        const {objectId} = req.params;
-        const {page = 1, pageSize = 10} = req.query;
+        const {page = 1, pageSize = 10, ownerId} = req.query;
         const pageInfo = {
             page: parseInt(page),
             pageSize: parseInt(pageSize),
-            objectId,
+            ownerId,
         };
-        const result = await dvereDao.list(pageInfo);
+        const result = await objektDao.list(pageInfo);
         res.json(result);
     } catch (error) {
         res.status(500).json({message: error.message});
     }
 });
 
-// POST /door/create - Create a new door
-router.post("/door/create", validate(createDoorSchema), authenticateToken, async (req, res) => {
+// POST /object/create - Create a new object
+router.post("/object/create", validate(createObjectSchema), authenticateToken, async (req, res) => {
     try {
-        const door = await dvereDao.create(req.body);
+        const objekt = await objektDao.create(req.body);
         res.status(201).json({
             status: 200,
-            message: "Vytvořeno",
-            data: door,
+            message: "Založeno",
+            data: objekt,
         });
     } catch (error) {
         res.status(400).json({message: error.message});
     }
 });
 
-// PUT /door/update - Update an existing door
-router.put("/door/update", validate(updateDoorSchema), authenticateToken, async (req, res) => {
+// PUT /object/update - Update an existing object
+router.put("/object/update", validate(updateObjectSchema), authenticateToken, async (req, res) => {
     try {
-        const door = await dvereDao.update(req.body);
-        if (!door) {
-            return res.status(404).json({message: "Door not found"});
+        const objekt = await objektDao.update(req.body);
+        if (!objekt) {
+            return res.status(404).json({message: "Objekt not found"});
         }
         res.json({
             status: 200,
             message: "Upraveno",
-            data: door,
+            data: objekt,
         });
     } catch (error) {
         res.status(400).json({message: error.message});
     }
 });
 
-// DELETE /door/delete - Delete a door
-router.delete("/door/delete", validate(deleteDoorSchema), authenticateToken, async (req, res) => {
+// DELETE /object/delete - Delete an object
+router.delete("/object/delete", validate(deleteObjectSchema), authenticateToken, async (req, res) => {
     try {
         const {id} = req.body;
         if (!id) {
             return res.status(400).json({message: "ID is required"});
         }
-        await dvereDao.delete(id);
+        await objektDao.delete(id);
         res.status(200).json({
             status: 200,
             message: "Smazáno",

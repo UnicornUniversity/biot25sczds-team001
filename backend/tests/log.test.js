@@ -1,6 +1,6 @@
 ﻿const request = require('supertest');
 const app = require('./testServer');
-const Dvere = require('../models/Dvere');
+const Dvere = require('../models/Door');
 const Log = require('../models/Log');
 require('./setup');
 
@@ -72,7 +72,7 @@ describe('Log Endpoints', () => {
     describe('POST /log/create', () => {
         it('should create a new log with system profile header', async () => {
             const res = await request(app)
-                .post('/log/create')                
+                .post('/log/create')
                 .send(testLog);
 
             expect(res.statusCode).toEqual(201);
@@ -81,10 +81,10 @@ describe('Log Endpoints', () => {
             expect(res.body.data).toHaveProperty('id');
             expect(res.body.data.message).toEqual(testLog.message);
         });
-        
+
         it('should return validation error for invalid severity', async () => {
             const res = await request(app)
-                .post('/log/create')                
+                .post('/log/create')
                 .send({
                     ...testLog,
                     severity: 'invalid-severity'

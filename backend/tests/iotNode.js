@@ -1,8 +1,8 @@
 ﻿const request = require('supertest');
 const app = require('./testServer');
-const Objekt = require('../models/Objekt');
-const Dvere = require('../models/Dvere');
-const IotNode = require('../models/IotNode');
+const Objekt = require('../models/Building');
+const Dvere = require('../models/Door');
+const IotNode = require('../models/Device');
 require('./setup');
 
 describe('IoT Device Endpoints', () => {
@@ -97,7 +97,7 @@ describe('IoT Device Endpoints', () => {
 
         it('should return validation error for missing required fields', async () => {
             const res = await request(app)
-                .post('/device/create')                
+                .post('/device/create')
                 .send({name: 'Incomplete Device'});
 
             expect(res.statusCode).toEqual(400);

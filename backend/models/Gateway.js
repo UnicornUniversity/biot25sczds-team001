@@ -1,23 +1,31 @@
-﻿const mongoose = require("mongoose");
+const mongoose = require("mongoose");
 
-const logSchema = new mongoose.Schema(
+const gatewaySchema = new mongoose.Schema(
     {
         _id: {
             type: String,
             required: true,
         },
-        doorId: {
+        ownerId: {
             type: String,
-            ref: "Door",
+            ref: "User",
             required: true,
         },
-        severity: {
+        buildingId: {
+            type: String,
+            ref: "Building",
+            default: null,
+        },
+        name: {
             type: String,
             required: true,
-            enum: ["info", "warning", "error", "success"],
         },
-        message: {
+        description: {
             type: String,
+            default: null,
+        },
+        created: {
+            type: Boolean,
             required: true,
         },
         createdAt: {
@@ -35,4 +43,4 @@ const logSchema = new mongoose.Schema(
     }
 );
 
-module.exports = mongoose.model("Log", logSchema);
+module.exports = mongoose.model("Gateway", gatewaySchema);

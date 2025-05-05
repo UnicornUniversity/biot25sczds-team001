@@ -1,6 +1,6 @@
 ﻿const express = require("express");
 const router = express.Router();
-const iotNodeDao = require("../dao/iotNodeDao");
+const iotNodeDao = require("../dao/deviceDao");
 const validate = require("../middleware/validate");
 const authenticateToken = require("../middleware/authTokenValidation");
 const Joi = require("joi");

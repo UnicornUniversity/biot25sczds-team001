@@ -22,8 +22,8 @@ const userSchema = new mongoose.Schema(
         },
         favouriteDoors: [
             {
-                type: Number,
-                ref: "Dvere",
+                type: String,
+                ref: "Door",
             },
         ],
         createdAt: {
@@ -40,7 +40,6 @@ const userSchema = new mongoose.Schema(
     }
 );
 
-// To auto increment ID when registering new user
 userSchema.plugin(AutoIncrement, {inc_field: "id"});
 
 module.exports = mongoose.model("User", userSchema);

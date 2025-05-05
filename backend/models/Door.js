@@ -1,17 +1,15 @@
 ﻿const mongoose = require("mongoose");
-const {v4: uuidv4} = require("uuid");
 
 const dvereSchema = new mongoose.Schema(
     {
-        id: {
-            type: String,
-            default: uuidv4,
-            unique: true,
-        },
-        objectId: {
+        _id: {
             type: String,
             required: true,
-            ref: "Objekt",
+        },
+        buildingId: {
+            type: String,
+            required: true,
+            ref: "Building",
         },
         name: {
             type: String,
@@ -19,24 +17,30 @@ const dvereSchema = new mongoose.Schema(
         },
         description: {
             type: String,
-            required: true,
+            default: null,
         },
         locked: {
             type: Boolean,
             default: true,
         },
+        state: {
+            type: String,
+            enum: ["safe", "alert", "inactive"],
+            required: true,
+        },
         createdAt: {
             type: Date,
             default: Date.now,
         },
-        updateAt: {
+        updatedAt: {
             type: Date,
             default: Date.now,
         },
     },
     {
-        timestamps: {createdAt: "createdAt", updatedAt: "updateAt"},
+        _id: false,
+        timestamps: {createdAt: "createdAt", updatedAt: "updatedAt"},
     }
 );
 
-module.exports = mongoose.model("Dvere", dvereSchema);
+module.exports = mongoose.model("Door", dvereSchema);

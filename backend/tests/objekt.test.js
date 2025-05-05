@@ -1,6 +1,6 @@
 ﻿const request = require('supertest');
 const app = require('./testServer');
-const Objekt = require('../models/Objekt');
+const Objekt = require('../models/Building');
 require('./setup');
 
 describe('Objekt Endpoints', () => {
