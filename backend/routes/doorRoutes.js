@@ -1,93 +1,129 @@
 ﻿const express = require("express");
 const router = express.Router();
-const dvereDao = require("../dao/doorDao");
+const doorDao = require("../dao/doorDao");
 const validate = require("../middleware/validate");
 const authenticateToken = require("../middleware/authTokenValidation");
 const Joi = require("joi");
 
 // Validation schemas
 const createDoorSchema = Joi.object({
-    objectId: Joi.string().required(),
+    _id: Joi.string(),
+    buildingId: Joi.string().required(),
     name: Joi.string().required(),
-    description: Joi.string().required(),
+    description: Joi.string().allow("", null),
     locked: Joi.boolean().default(true),
+    state: Joi.string().valid("safe", "alert", "inactive").default("safe"),
 });
 
 const updateDoorSchema = Joi.object({
-    id: Joi.string().required(),
-    objectId: Joi.string(),
     name: Joi.string(),
-    description: Joi.string(),
+    description: Joi.string().allow("", null),
+    buildingId: Joi.string(),
     locked: Joi.boolean(),
-}).min(2); // At least id and one field to update
+    state: Joi.string().valid("safe", "alert", "inactive")
+}).min(1);
 
-const deleteDoorSchema = Joi.object({
-    id: Joi.string().required(),
-});
-
-// TODO: update based on FE needs
-// GET /object/:objectId/door - List doors for a specific object
-router.get("/object/:objectId/door", authenticateToken, async (req, res) => {
+// List doors for a specific building
+router.get("/buildings/:buildingId/doors", authenticateToken, async (req, res) => {
     try {
-        const {objectId} = req.params;
         const {page = 1, pageSize = 10} = req.query;
-        const pageInfo = {
+        const result = await doorDao.list({
             page: parseInt(page),
             pageSize: parseInt(pageSize),
-            objectId,
-        };
-        const result = await dvereDao.list(pageInfo);
+            buildingId: req.params.buildingId,
+        });
         res.json(result);
-    } catch (error) {
-        res.status(500).json({message: error.message});
+    } catch (err) {
+        res.status(500).json({message: err.message});
     }
 });
 
-// POST /door/create - Create a new door
-router.post("/door/create", validate(createDoorSchema), authenticateToken, async (req, res) => {
+// Fetch one door by ID
+router.get("/doors/:id", authenticateToken, async (req, res) => {
     try {
-        const door = await dvereDao.create(req.body);
-        res.status(201).json({
-            status: 200,
-            message: "Vytvořeno",
-            data: door,
-        });
-    } catch (error) {
-        res.status(400).json({message: error.message});
+        const door = await doorDao.get({_id: req.params.id});
+        if (!door) return res.status(404).json({message: "Door not found"});
+        res.json(door);
+    } catch (err) {
+        res.status(500).json({message: err.message});
     }
 });
 
-// PUT /door/update - Update an existing door
-router.put("/door/update", validate(updateDoorSchema), authenticateToken, async (req, res) => {
+// Create a new door
+router.post("/doors", validate(createDoorSchema), authenticateToken, async (req, res) => {
     try {
-        const door = await dvereDao.update(req.body);
-        if (!door) {
-            return res.status(404).json({message: "Door not found"});
-        }
-        res.json({
-            status: 200,
-            message: "Upraveno",
-            data: door,
-        });
-    } catch (error) {
-        res.status(400).json({message: error.message});
+        const door = await doorDao.create(req.body);
+        res.status(201).json({message: "Door created", data: door});
+    } catch (err) {
+        res.status(400).json({message: err.message});
     }
 });
 
-// DELETE /door/delete - Delete a door
-router.delete("/door/delete", validate(deleteDoorSchema), authenticateToken, async (req, res) => {
+// Update a door by ID
+router.put("/doors/:id", validate(updateDoorSchema), authenticateToken, async (req, res) => {
     try {
-        const {id} = req.body;
-        if (!id) {
-            return res.status(400).json({message: "ID is required"});
-        }
-        await dvereDao.delete(id);
-        res.status(200).json({
-            status: 200,
-            message: "Smazáno",
-        });
-    } catch (error) {
-        res.status(500).json({message: error.message});
+        const updateData = {...req.body};
+        delete updateData._id;
+        const door = await doorDao.update({_id: req.params.id, ...updateData});
+        if (!door) return res.status(404).json({message: "Door not found"});
+        res.json({message: "Door updated", data: door});
+    } catch (err) {
+        res.status(400).json({message: err.message});
+    }
+});
+
+// Delete a door by ID
+router.delete("/doors/:id", authenticateToken, async (req, res) => {
+    try {
+        const result = await doorDao.delete(req.params.id);
+        if (!result) return res.status(404).json({message: "Door not found"});
+        res.json({message: "Door deleted"});
+    } catch (err) {
+        res.status(500).json({message: err.message});
+    }
+});
+
+// Toggle door state
+router.post("/doors/:id/toggle-state", authenticateToken, async (req, res) => {
+    try {
+        const door = await doorDao.toggleState(req.params.id);
+        if (!door) return res.status(404).json({message: "Door not found"});
+        res.json({message: "State toggled", data: door});
+    } catch (err) {
+        res.status(500).json({message: err.message});
+    }
+});
+
+// Toggle door lock
+router.post("/doors/:id/toggle-lock", authenticateToken, async (req, res) => {
+    try {
+        const door = await doorDao.toggleLock(req.params.id);
+        if (!door) return res.status(404).json({message: "Door not found"});
+        res.json({message: "Lock toggled", data: door});
+    } catch (err) {
+        res.status(500).json({message: err.message});
+    }
+});
+
+// Toggle door favourite for the logged-in user
+router.post("/doors/:id/toggle-favourite", authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const updatedUser = await doorDao.toggleFavourite(userId, req.params.id);
+        res.json({message: "Favourite toggled", data: updatedUser.favouriteDoors});
+    } catch (err) {
+        res.status(500).json({message: err.message});
+    }
+});
+
+// Fetch logs for a door
+router.get("/doors/:id/logs", authenticateToken, async (req, res) => {
+    try {
+        const {limit = 10, offset = 0} = req.query;
+        const logs = await doorDao.getLogs(req.params.id, parseInt(limit), parseInt(offset));
+        res.json({message: "Logs fetched", data: logs});
+    } catch (err) {
+        res.status(500).json({message: err.message});
     }
 });
 
