@@ -15,7 +15,11 @@ const authDao = {
         await newUser.save();
 
         const token = jwt.sign(
-            {id: newUser.id, loginName: newUser.loginName, name: newUser.name},
+            {
+                id: newUser._id,
+                loginName: newUser.loginName,
+                name: newUser.name,
+            },
             JWT_SECRET,
             {expiresIn: "7d"}
         );
@@ -23,7 +27,11 @@ const authDao = {
         return {
             message: "User registered successfully!",
             token,
-            user: {id: newUser.id, name: newUser.name, loginName: newUser.loginName},
+            user: {
+                id: newUser._id,
+                name: newUser.name,
+                loginName: newUser.loginName,
+            },
         };
     },
 
@@ -34,7 +42,11 @@ const authDao = {
         }
 
         const token = jwt.sign(
-            {id: user.id, loginName: user.loginName, name: user.name},
+            {
+                id: user._id,
+                loginName: user.loginName,
+                name: user.name,
+            },
             JWT_SECRET,
             {expiresIn: "7d"}
         );
@@ -42,7 +54,11 @@ const authDao = {
         return {
             message: "Login successful!",
             token,
-            user: {id: user.id, name: user.name, loginName: user.loginName},
+            user: {
+                id: user._id,
+                name: user.name,
+                loginName: user.loginName,
+            },
         };
     },
 };

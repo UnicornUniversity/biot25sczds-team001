@@ -9,11 +9,16 @@ const deviceDao = {
         return await Device.findOne(filter);
     },
 
-    list: async ({page = 1, pageSize = 10, doorId, gatewayId}) => {
+    getById: async (_id) => {
+        return await Device.findById(_id);
+    },
+
+    list: async ({page = 1, pageSize = 10, doorId, gatewayId, created}) => {
         const skip = (page - 1) * pageSize;
         const query = {};
         if (doorId) query.doorId = doorId;
         if (gatewayId) query.gatewayId = gatewayId;
+        if (created !== undefined) query.created = created;
 
         const itemList = await Device.find(query).skip(skip).limit(pageSize);
         const total = await Device.countDocuments(query);
@@ -29,14 +34,12 @@ const deviceDao = {
         };
     },
 
-    update: async (object) => {
-        const {_id, ...updateData} = object;
+    updateById: async (_id, updateData) => {
         updateData.updatedAt = new Date();
-
         return await Device.findByIdAndUpdate(_id, updateData, {new: true});
     },
 
-    delete: async (_id) => {
+    deleteById: async (_id) => {
         return await Device.findByIdAndDelete(_id);
     },
 };

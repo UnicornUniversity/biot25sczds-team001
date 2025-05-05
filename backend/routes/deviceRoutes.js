@@ -1,88 +1,83 @@
 ﻿const express = require("express");
 const router = express.Router();
-const iotNodeDao = require("../dao/deviceDao");
-const validate = require("../middleware/validate");
+const deviceDao = require("../dao/deviceDao");
 const authenticateToken = require("../middleware/authTokenValidation");
+const validate = require("../middleware/validate");
 const Joi = require("joi");
 
-// Validation schemas
-const createDeviceSchema = Joi.object({
+const createSchema = Joi.object({
+    _id: Joi.string(),
     doorId: Joi.string().required(),
+    gatewayId: Joi.string().required(),
     name: Joi.string().required(),
     description: Joi.string().allow("").default(""),
+    created: Joi.boolean().default(true)
 });
 
-const updateDeviceSchema = Joi.object({
-    id: Joi.string().required(),
-    doorId: Joi.string(),
+const updateSchema = Joi.object({
     name: Joi.string(),
-    description: Joi.string().allow(""),
-}).min(2); // At least id and one field to update
+    description: Joi.string().allow("", null),
+    doorId: Joi.string().allow(null),
+    gatewayId: Joi.string().allow(null),
+    created: Joi.boolean(),
+}).min(1);
 
-const deleteDeviceSchema = Joi.object({
-    id: Joi.string().required(),
-});
-
-// TODO: update based on FE needs
-// GET /device - List all IoT devices
-router.get("/device", authenticateToken, async (req, res) => {
+// GET /devices?gatewayId=...&created=true
+router.get("/devices", authenticateToken, async (req, res) => {
     try {
-        const {page = 1, pageSize = 10, doorId} = req.query;
+        const {page = 1, pageSize = 10, doorId, gatewayId, created} = req.query;
         const pageInfo = {
             page: parseInt(page),
             pageSize: parseInt(pageSize),
             doorId,
+            gatewayId,
+            created: created !== undefined ? created === "true" : undefined,
         };
-        const result = await iotNodeDao.list(pageInfo);
+        const result = await deviceDao.list(pageInfo);
         res.json(result);
     } catch (error) {
         res.status(500).json({message: error.message});
     }
 });
 
-// POST /device/create - Create a new IoT device (System profile only)
-router.post("/device/create", validate(createDeviceSchema), authenticateToken, async (req, res) => {
+// GET /devices/:id
+router.get("/devices/:id", authenticateToken, async (req, res) => {
     try {
-        const device = await iotNodeDao.create(req.body);
-        res.status(201).json({
-            status: 200,
-            message: "Vytvořeno",
-            data: device,
-        });
+        const device = await deviceDao.getById(req.params.id);
+        if (!device) return res.status(404).json({message: "Device not found"});
+        res.json(device);
+    } catch (error) {
+        res.status(500).json({message: error.message});
+    }
+});
+
+// POST /devices
+router.post("/devices", validate(createSchema), authenticateToken, async (req, res) => {
+    try {
+        const device = await deviceDao.create(req.body);
+        res.status(201).json({message: "Device created", data: device});
     } catch (error) {
         res.status(400).json({message: error.message});
     }
 });
 
-// PUT /device/update - Update an existing IoT device
-router.put("/device/update", validate(updateDeviceSchema), authenticateToken, async (req, res) => {
+// PUT /devices/:id
+router.put("/devices/:id", validate(updateSchema), authenticateToken, async (req, res) => {
     try {
-        const device = await iotNodeDao.update(req.body);
-        if (!device) {
-            return res.status(404).json({message: "Device not found"});
-        }
-        res.json({
-            status: 200,
-            message: "Upraveno",
-            data: device,
-        });
+        const device = await deviceDao.updateById(req.params.id, req.body);
+        if (!device) return res.status(404).json({message: "Device not found"});
+        res.json({message: "Device updated", data: device});
     } catch (error) {
         res.status(400).json({message: error.message});
     }
 });
 
-// DELETE /device/delete - Delete an IoT device
-router.delete("/device/delete", validate(deleteDeviceSchema), authenticateToken, async (req, res) => {
+// DELETE /devices/:id
+router.delete("/devices/:id", authenticateToken, async (req, res) => {
     try {
-        const {id} = req.body;
-        if (!id) {
-            return res.status(400).json({message: "ID is required"});
-        }
-        await iotNodeDao.delete(id);
-        res.status(200).json({
-            status: 200,
-            message: "Smazáno",
-        });
+        const device = await deviceDao.deleteById(req.params.id);
+        if (!device) return res.status(404).json({message: "Device not found"});
+        res.json({message: "Device deleted"});
     } catch (error) {
         res.status(500).json({message: error.message});
     }
