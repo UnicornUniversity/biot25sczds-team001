@@ -35,11 +35,30 @@ router.post("/log/create", validate(createLogSchema), authenticateToken, async (
         const log = await logDao.create(req.body);
         res.status(201).json({
             status: 200,
-            message: "Vytvořeno",
+            message: "Log created",
             data: log,
         });
     } catch (error) {
         res.status(400).json({message: error.message});
+    }
+});
+
+router.get("/logs/user/:ownerId", authenticateToken, async (req, res) => {
+    try {
+        const {limit = 10, offset = 0} = req.query;
+
+        const logs = await logDao.listByUser({
+            ownerId: req.params.ownerId,
+            limit: parseInt(limit),
+            offset: parseInt(offset),
+        });
+
+        res.json({
+            message: "User logs fetched successfully",
+            data: logs,
+        });
+    } catch (error) {
+        res.status(500).json({message: error.message});
     }
 });
 

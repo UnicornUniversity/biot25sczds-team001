@@ -1,4 +1,5 @@
 ﻿const Log = require("../models/Log");
+const Door = require("../models/Door");
 
 const logDao = {
     create: async (uuObject) => {
@@ -48,6 +49,25 @@ const logDao = {
             .sort({createdAt: -1})
             .skip(offset)
             .limit(limit);
+    },
+
+    listByUser: async ({ownerId, limit = 10, offset = 0}) => {
+        const doors = await Door.find({});
+        const userDoors = doors.filter(d => d.buildingId && d.buildingId.startsWith("bld"));
+
+        const buildingIds = userDoors.map(d => d.buildingId);
+        const doorIds = doors
+            .filter(door => buildingIds.includes(door.buildingId))
+            .map(door => door._id);
+
+        const query = {doorId: {$in: doorIds}};
+
+        const logs = await Log.find(query)
+            .sort({createdAt: -1})
+            .skip(offset)
+            .limit(limit);
+
+        return logs;
     },
 };
 
