@@ -46,41 +46,69 @@ devices, and logs. It includes endpoints for CRUD operations, validation, and te
 
 ## **API Endpoints**
 
-### **Object Endpoints**
+### **Auth Endpoints**
 
-| Method | Endpoint         | Description                 |
- |--------|------------------|-----------------------------|
-| GET    | `/object`        | List objects with filtering |
-| POST   | `/object/create` | Create a new object         |
-| PUT    | `/object/update` | Update an existing object   |
-| DELETE | `/object/delete` | Delete an object            |
+| Method | Endpoint    | Description               |
+|--------|-------------|---------------------------|
+| POST   | `/register` | Register a new user       |
+| POST   | `/login`    | Login and receive a token |
+
+### **Building Endpoints**
+
+| Method | Endpoint                        | Description                                         |
+|--------|---------------------------------|-----------------------------------------------------|
+| GET    | `/buildings`                    | List all buildings (filter by owner)                |
+| POST   | `/buildings`                    | Create a new building                               |
+| GET    | `/buildings/:id`                | Get building details by ID                          |
+| PUT    | `/buildings/:id`                | Update a building                                   |
+| DELETE | `/buildings/:id`                | Delete a building                                   |
+| GET    | `/buildings/:id/logs`           | Get latest logs for one building (limit & offset)   |
+| GET    | `/buildings/logs/recent`        | Get latest logs from all buildings (limit & offset) |
+| GET    | `/buildings/available-gateways` | Get gateways not yet connected to a building        |
 
 ### **Door Endpoints**
 
-| Method | Endpoint                 | Description              |
- |--------|--------------------------|--------------------------|
-| GET    | `/object/:objectId/door` | List doors for an object |
-| POST   | `/door/create`           | Create a new door        |
-| PUT    | `/door/update`           | Update an existing door  |
-| DELETE | `/door/delete`           | Delete a door            |
+| Method | Endpoint                         | Description                                    |
+|--------|----------------------------------|------------------------------------------------|
+| GET    | `/buildings/:buildingId/doors`   | List all doors in a building                   |
+| GET    | `/doors/:id`                     | Get one door detail                            |
+| POST   | `/doors`                         | Create a new door                              |
+| PUT    | `/doors/:id`                     | Update an existing door                        |
+| DELETE | `/doors/:id`                     | Delete a door                                  |
+| POST   | `/doors/:id/toggle-lock`         | Lock/unlock a door                             |
+| POST   | `/doors/:id/toggle-state`        | Change door state (e.g., safe → alert)         |
+| POST   | `/doors/:id/toggle-favourite`    | Add/remove door from user’s favourites         |
+| GET    | `/doors/:id/logs`                | Fetch logs for a door (limit & offset)         |
+| GET    | `/devices/available-controllers` | Get available devices not assigned to any door |
 
 ### **IoT Device Endpoints**
 
-| Method | Endpoint         | Description                      |
- |--------|------------------|----------------------------------|
-| GET    | `/device`        | List IoT devices                 |
-| POST   | `/device/create` | Create a new IoT device (System) |
-| PUT    | `/device/update` | Update an existing IoT device    |
-| DELETE | `/device/delete` | Delete an IoT device             |
+| Method | Endpoint                         | Description                                       |
+|--------|----------------------------------|---------------------------------------------------|
+| GET    | `/devices`                       | List all devices (filter by door/gateway/created) |
+| GET    | `/devices/:id`                   | Get details of a device                           |
+| POST   | `/devices`                       | Create a new device                               |
+| PUT    | `/devices/:id`                   | Update a device                                   |
+| DELETE | `/devices/:id`                   | Delete a device                                   |
+| GET    | `/devices/available-controllers` | Get devices created but not assigned to any door  |
+
+### **Gateway Endpoints**
+
+| Method | Endpoint             | Description                                      |
+|--------|----------------------|--------------------------------------------------|
+| GET    | `/gateways`          | List gateways (filter by building/owner/created) |
+| GET    | `/gateways/:id`      | Get details of a gateway                         |
+| POST   | `/gateways`          | Create a new gateway                             |
+| PUT    | `/gateways/:id`      | Update a gateway                                 |
+| DELETE | `/gateways/:id`      | Delete a gateway                                 |
+| POST   | `/gateways/:id/scan` | Start scan to discover available CORE MODULES    |
 
 ### **Log Endpoints**
 
-| Method | Endpoint      | Description               |
- |--------|---------------|---------------------------|
-| GET    | `/logs`       | List logs                 |
-| POST   | `/log/create` | Create a new log (System) |
-
- ---
+| Method | Endpoint | Description                            |
+|--------|----------|----------------------------------------|
+| GET    | `/logs`  | List logs (filter by door or severity) |
+| POST   | `/logs`  | Create a new log                       |
 
 ## **Testing**
 
@@ -105,22 +133,30 @@ Run automated tests to verify the functionality of the API:
  ├── config/
  │   └── db.js                # MongoDB connection setup
  ├── dao/
- │   ├── buildingDao.js         # Data access for objects
- │   ├── doorDao.js          # Data access for doors
- │   ├── deviceDao.js        # Data access for IoT devices
+ │   ├── authDao.js           # Data access for auth
+ │   ├── buildingDao.js       # Data access for buildings
+ │   ├── deviceDao.js         # Data access for IOT devices
+ │   ├── doorDao.js           # Data access for doors
+ │   ├── gatewayDao.js        # Data access for gateways
  │   └── logDao.js            # Data access for logs
  ├── middleware/
- │   └── validate.js          # Input validation middleware
+ │   ├── authTokenValidation.js        # Auth token validation middleware
+ │   └── validate.js                   # Input validation middleware
  ├── models/
- │   ├── Building.js            # Object schema
- │   ├── Door.js             # Door schema
- │   ├── Device.js           # IoT device schema
- │   └── Log.js               # Log schema
+ │   ├── Building.js            # Building schema
+ │   ├── Device.js              # IoT device schema
+ │   ├── Door.js                # Door schema
+ │   ├── Gateway.js             # Gateway schema
+ │   ├── Log.js                 # Log schema
+ │   └── User.js                # User schema
  ├── routes/
- │   ├── buildingRoutes.js      # Object routes
- │   ├── doorRoutes.js       # Door routes
- │   ├── deviceRoutes.js     # IoT device routes
- │   └── logRoutes.js         # Log routes
+ │   ├── authRoutes.js          # Auth routes
+ │   ├── buildingRoutes.js      # Building routes
+ │   ├── deviceRoutes.js        # IoT device routes
+ │   ├── doorRoutes.js          # Door routes
+ │   ├── gatewayRoutes.js       # Gateway routes
+ │   ├── logRoutes.js           # Log routes
+ │   └── testRoutes.js          # Test routes
  ├── tests/
  │   ├── setup.js             # Test setup with in-memory MongoDB
  │   ├── testServer.js        # Test server configuration
