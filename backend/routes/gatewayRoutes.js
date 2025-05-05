@@ -84,4 +84,21 @@ router.delete("/gateways/:id", authenticateToken, async (req, res) => {
     }
 });
 
+// POST /gateways/:id/scan
+router.post("/gateways/:id/scan", authenticateToken, async (req, res) => {
+    const gatewayId = req.params.id;
+
+    try {
+        const Device = require("../models/Device");
+        const foundModules = await Device.find({gatewayId, created: false});
+
+        res.json({
+            message: `Scan complete for gateway ${gatewayId}`,
+            foundModules
+        });
+    } catch (err) {
+        res.status(500).json({message: err.message});
+    }
+});
+
 module.exports = router;
