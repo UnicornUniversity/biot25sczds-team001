@@ -31,10 +31,10 @@ const buildingDao = {
     },
 
     update: async (object) => {
-        const {_id, ...updateData} = object;
+        const {id, ...updateData} = object;
         updateData.updatedAt = new Date();
 
-        return await Building.findByIdAndUpdate(_id, updateData, {new: true});
+        return await Building.findByIdAndUpdate(id, updateData, {new: true});
     },
 
     delete: async (_id) => {

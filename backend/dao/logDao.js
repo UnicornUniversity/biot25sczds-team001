@@ -39,6 +39,16 @@ const logDao = {
     delete: async (_id) => {
         return await Log.findByIdAndDelete(_id);
     },
+
+    listByBuilding: async ({buildingId, limit = 10, offset = 0}) => {
+        const Door = require("../models/Door");
+        const doors = await Door.find({buildingId}).select("_id");
+        const doorIds = doors.map(d => d._id);
+        return await Log.find({doorId: {$in: doorIds}})
+            .sort({createdAt: -1})
+            .skip(offset)
+            .limit(limit);
+    },
 };
 
 module.exports = logDao;
