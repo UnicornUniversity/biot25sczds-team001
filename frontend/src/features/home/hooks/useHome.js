@@ -1,4 +1,3 @@
-// src/features/home/hooks/useHomeLogs.js
 'use client';
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
@@ -13,7 +12,7 @@ import msgs          from '@/lib/messages';
 
 const delay = ms => new Promise(res => setTimeout(res, ms));
 
-export default function useHomeLogs(initialLimit = 5) {
+export default function useHome(initialLimit = 5) {
   const { run, success, error } = useStatus();
   const uid = getCurrentUserId();
 

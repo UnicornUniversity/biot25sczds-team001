@@ -1,4 +1,3 @@
-// src/hooks/useBuildings.js
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';

@@ -114,6 +114,12 @@ const msgs = {
       success: 'Hotovo!',
       error: 'Něco se pokazilo :(',
     },
+
+    homeDoors: {
+      fetch:       'Načítám stavy dveří…',
+      fetchSuccess:'Stavy dveří načteny.',
+      fetchError:  'Nepodařilo se načíst stavy dveří: {error}',
+    },
   };
   
   export default msgs;

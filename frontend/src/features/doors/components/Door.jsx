@@ -18,12 +18,13 @@ export default function Door({
   onEdit,
   onLogs,
 }) {
-  // Mapa stav → barva ikony
+  // Mapa stav → barva
   const colorMap = {
     safe:     'var(--color-success)',
     alert:    'var(--color-error)',
     inactive: 'var(--gray-alpha-400)',
   };
+  const iconColor = colorMap[state] || colorMap.inactive;
 
   return (
     <li className={cls.card} data-state={state}>
@@ -36,16 +37,30 @@ export default function Door({
       <div className={cls.center}>
         <GiDoor
           className={cls.doorIcon}
-          style={{ color: colorMap[state] || colorMap.inactive }}
+          style={{ color: iconColor }}
         />
         <span className={cls.name}>{door.name}</span>
       </div>
 
       <div className={cls.actions}>
-        <DoorLogsButton onClick={onLogs} />
-        <DoorEditButton onClick={onEdit} />
-        <DoorCodeButton locked={door.locked} onToggle={() => onToggleLock(door._id)} />
-        <DoorFavouriteButton active={isFavourite} onToggle={() => onToggleFavourite(door._id)} />
+        <DoorLogsButton
+          onClick={onLogs}
+          color={iconColor}
+        />
+        <DoorEditButton
+          onClick={onEdit}
+          color={iconColor}
+        />
+        <DoorCodeButton
+          locked={door.locked}
+          onToggle={() => onToggleLock(door._id)}
+          color={iconColor}
+        />
+        <DoorFavouriteButton
+          active={isFavourite}
+          onToggle={() => onToggleFavourite(door._id)}
+          color={iconColor}
+        />
       </div>
     </li>
   );

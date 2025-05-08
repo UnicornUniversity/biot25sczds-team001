@@ -1,26 +1,77 @@
-.card{
-    display:grid;
-    grid-template-columns:34px 1fr auto;
-    align-items:center;
-    gap:14px;
-  
-    padding:16px 20px;
-    border:1px solid var(--gray-alpha-200);
-    border-radius:10px;
-    background:var(--gray-alpha-150);
-  }
-  
-  /* — střed karty — */
-  .center{
-    display:flex;
-    align-items:center;
-    gap:12px;
-    user-select:none;
-  }
-  
-  /* ozdobná ikona a název */
-  .doorIcon{ font-size:1.6rem; color:#27AE60; }
-  .name    { font-weight:600; }
-  
-  /* — pravý sloupec akcí — */
-  .actions{ display:flex; align-items:center; gap:10px; }
+/* src/features/doors/components/Door.module.css */
+
+.card {
+  display: grid;
+  grid-template-columns: 34px 1fr auto;
+  align-items: center;
+  gap: 14px;
+
+  padding: 16px 20px;
+  border: 1px solid var(--gray-alpha-200);
+  border-radius: 10px;
+  background: var(--gray-alpha-150);
+  transition: border-color 0.25s, box-shadow 0.25s;
+}
+
+.card:hover {
+  border-color: #27AE60;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* — střed karty — */
+.center {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  user-select: none;
+}
+
+/* ozdobná ikona a název */
+.doorIcon {
+  font-size: 1.6rem;
+  color: var(--color-success);
+  transition: color 0.2s;
+}
+
+.name {
+  font-weight: 600;
+}
+
+/* — pravý sloupec akcí — */
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* akční tlačítka */
+.actions button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  transition: color 0.2s;
+}
+
+.actions button:hover svg {
+  color: var(--color-success);
+}
+
+/* === ALERT OVERRIDES === */
+.card[data-state="alert"] {
+  border-color: var(--color-error);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.card[data-state="alert"]:hover {
+  border-color: var(--color-error);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.card[data-state="alert"] .doorIcon {
+  color: var(--color-error);
+}
+
+.card[data-state="alert"] .actions button:hover svg {
+  color: var(--color-error);
+}

@@ -1,12 +1,14 @@
-﻿const express           = require("express");
+﻿// src/routes/buildings.js
+
+const express           = require("express");
 const router            = express.Router();
 const buildingDao       = require("../dao/buildingDao");
 const gatewayDao        = require("../dao/gatewayDao");
-const deviceDao         = require("../dao/deviceDao");
+const Device            = require("../models/Device");
+const Door              = require("../models/Door");       // ← importujeme model dveří
 const auth              = require("../middleware/authTokenValidation");
 const validate          = require("../middleware/validate");
 const Joi               = require("joi");
-const Device            = require("../models/Device");
 
 // --- Validation schemas ---
 const createSchema = Joi.object({
@@ -22,19 +24,36 @@ const updateSchema = Joi.object({
 }).min(1);
 
 // GET /buildings
+// → vrací stránkovaně seznam budov včetně odvozeného statusu
 router.get("/buildings", auth, async (req, res) => {
   try {
     const ownerId = req.user.id;
-    const page     = parseInt(req.query.page)     || 1;
-    const pageSize = parseInt(req.query.pageSize) || 10;
+    const page     = parseInt(req.query.page, 10)     || 1;
+    const pageSize = parseInt(req.query.pageSize, 10) || 10;
     const result   = await buildingDao.list({ page, pageSize, ownerId });
-    res.json(result);
+
+    // pro každou budovu zjistíme, jestli má aspoň jedny dveře v alertu
+    const withStatus = await Promise.all(
+      result.itemList.map(async b => {
+        const alertDoor = await Door.findOne({ buildingId: b._id, state: "alert" });
+        return {
+          ...b.toObject(),
+          status: alertDoor ? "alert" : "safe"
+        };
+      })
+    );
+
+    res.json({
+      itemList: withStatus,
+      pageInfo: result.pageInfo
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 });
 
-// GET /buildings/:id  (včetně gatewayId injection)
+// GET /buildings/:id
+// → vrací detail jedné budovy + gatewayId + status
 router.get("/buildings/:id", auth, async (req, res) => {
   try {
     const ownerId = req.user.id;
@@ -49,12 +68,17 @@ router.get("/buildings/:id", auth, async (req, res) => {
     // 2) najít aktuálně přiřazenou gateway
     const oldGw = await gatewayDao.getByFilter({ ownerId, buildingId: bldId });
 
-    // 3) vrátit budovu + gatewayId
+    // 3) zjistit status dveří
+    const alertDoor = await Door.findOne({ buildingId: bldId, state: "alert" });
+    const status = alertDoor ? "alert" : "safe";
+
+    // 4) vrátit budovu + gatewayId + status
     res.json({
       message: "Building fetched",
       data: {
         ...building.toObject(),
-        gatewayId: oldGw?._id || null
+        gatewayId: oldGw?._id || null,
+        status
       }
     });
   } catch (err) {
@@ -108,26 +132,23 @@ router.put(
       const oldGw = await gatewayDao.getByFilter({ ownerId, buildingId: bldId });
       const oldGwId = oldGw?._id;
 
-      // 3) pokud se změnila, odpojit starou a vyčistit device doorId
+      // 3) pokud se změnila, odpojit starou a odpojit u ní všechna doorId
       if (gatewayId !== oldGwId) {
         if (oldGwId) {
-          // odpojit starou bránu od budovy
           await gatewayDao.updateById(oldGwId, { buildingId: null });
-          // všechna zařízení u této brány odpojit od dveří
+          // očistit doorId na všech zařízeních z původní brány
           await Device.updateMany(
             { gatewayId: oldGwId },
             { $set: { doorId: null } }
           );
         }
         if (gatewayId) {
-          // přiřadit novou bránu k budově
           await gatewayDao.updateById(gatewayId, { buildingId: bldId });
         }
       }
 
       // 4) aktualizovat data budovy (name/description)
       const updated = await buildingDao.update({ id: bldId, name, description });
-
       res.json({ message: "Building updated", data: updated });
     } catch (err) {
       res.status(400).json({ message: err.message });
@@ -147,11 +168,10 @@ router.delete("/buildings/:id", auth, async (req, res) => {
       return res.status(404).json({ message: "Building not found" });
     }
 
-    // 2) odpojit případnou gateway
+    // 2) odpojit případnou gateway a očistit device.doorId
     const oldGw = await gatewayDao.getByFilter({ ownerId, buildingId: bldId });
     if (oldGw?._id) {
       await gatewayDao.updateById(oldGw._id, { buildingId: null });
-      // očistit device doorId na této bráně
       await Device.updateMany(
         { gatewayId: oldGw._id },
         { $set: { doorId: null } }
@@ -160,7 +180,6 @@ router.delete("/buildings/:id", auth, async (req, res) => {
 
     // 3) smazat budovu
     await buildingDao.delete(bldId);
-
     res.json({ message: "Building deleted" });
   } catch (err) {
     res.status(500).json({ message: err.message });

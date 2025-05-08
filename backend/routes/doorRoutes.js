@@ -8,6 +8,7 @@ const auth        = require("../middleware/authTokenValidation");
 const Joi         = require("joi");
 const User        = require("../models/User");     
 const Door         = require("../models/Door"); 
+const Building = require("../models/Building");
 
 // Validation schemas
 const createDoorSchema = Joi.object({
@@ -32,6 +33,41 @@ const toggleStateSchema = Joi.object({
     state: Joi.string().valid("safe", "alert", "inactive").required(),
   });
   
+
+// NOVÝ ENDPOINT: Získat stav všech dveří uživatele
+router.get(
+    "/doors/status",
+    auth,
+    async (req, res) => {
+      try {
+        const ownerId = req.user.id;
+  
+        // 1) načteme všechny budovy uživatele
+        const buildings = await Building.find({ ownerId });
+        const buildingMap = buildings.reduce((acc, b) => {
+          acc[b._id] = b.name;
+          return acc;
+        }, {});
+  
+        // 2) načteme všechny dveře, které k nim patří
+        const buildingIds = Object.keys(buildingMap);
+        const doors = await Door.find({ buildingId: { $in: buildingIds } });
+  
+        // 3) poskládáme response
+        const data = doors.map(d => ({
+          doorId:       d._id,
+          doorName:     d.name,
+          state:        d.state,
+          buildingId:   d.buildingId,
+          buildingName: buildingMap[d.buildingId] || null
+        }));
+  
+        res.json({ message: "Doors status fetched", data });
+      } catch (err) {
+        res.status(500).json({ message: err.message });
+      }
+    }
+  );
 
 // ─── FETCH CURRENT USER’S FAVOURITE DOORS ────────────────────
 // Must come *before* the "/doors/:id" route

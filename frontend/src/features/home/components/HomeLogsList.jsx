@@ -3,7 +3,7 @@
 import { useRef, useEffect } from 'react';
 import gsap from 'gsap';
 
-import useHomeLogs    from '../hooks/useHomeLogs';
+import useHome    from '../hooks/useHome';
 import HomeLogItem    from './HomeLogItem';
 import RefreshButton  from './RefreshButton';
 import ShowMoreButton from './ShowMoreButton';
@@ -19,7 +19,7 @@ export default function HomeLogsList({ onSelect }) {
     onShowMore,
     onCollapse,
     canLoadMore,
-  } = useHomeLogs(initialLimit);
+  } = useHome(initialLimit);
 
   /* jednoduchá vstupní animace */
   const listRef = useRef(null);

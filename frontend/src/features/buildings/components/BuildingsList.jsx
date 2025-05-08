@@ -1,7 +1,8 @@
 'use client';
-import Building           from './Building';
-import BuildingAddButton  from './BuildingAddButton';
-import styles             from './BuildingsList.module.css';
+
+import Building          from './Building';
+import BuildingAddButton from './BuildingAddButton';
+import styles            from './BuildingsList.module.css';
 
 export default function BuildingsList({ buildings, onAdd, onEdit, onLogs }) {
   return (
@@ -9,7 +10,6 @@ export default function BuildingsList({ buildings, onAdd, onEdit, onLogs }) {
       <div className={styles.head}>
         <BuildingAddButton onClick={onAdd} />
       </div>
-
       <ul className={styles.grid}>
         {buildings.map(b => (
           <Building

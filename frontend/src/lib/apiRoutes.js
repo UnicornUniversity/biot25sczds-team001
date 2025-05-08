@@ -30,6 +30,7 @@ export const API_ROUTES = {
         listByBuilding: (buildingId, page = 1, pageSize = 10) =>
           `/buildings/${buildingId}/doors?page=${page}&pageSize=${pageSize}`,
         favourites:    '/doors/favourites', 
+        status:          '/doors/status',  
         get:               id     => `/doors/${id}`,
         create:                  '/doors',
         update:            id     => `/doors/${id}`,
