@@ -14,10 +14,10 @@ app.use(express.json());
 
 app.use(cors({
     origin: true,           // tu jsme místo stringu dali true
-    methods: ["GET","POST","PUT","DELETE","OPTIONS"],
-    allowedHeaders: ["Content-Type","Authorization"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true
-  }));
+}));
 
 // Routes
 app.use("/", require("./routes/authRoutes"));
@@ -27,15 +27,17 @@ app.use("/", require("./routes/doorRoutes"));
 app.use("/", require("./routes/deviceRoutes"));
 app.use("/", require("./routes/logRoutes"));
 app.use("/", require("./routes/gatewayRoutes"));
+app.use("/", require("./routes/deviceAuthRoutes"));
+app.use("/", require("./routes/deviceDataRoutes"));
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ message: "Something went wrong!" });
+    console.error(err.stack);
+    res.status(500).json({message: "Something went wrong!"});
 });
 
 // Start the server
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+    console.log(`Server is running on port ${PORT}`);
 });
