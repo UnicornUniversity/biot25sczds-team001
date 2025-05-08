@@ -1,0 +1,5 @@
+/* ControllerList.module.css */
+.wrapper{display:flex;flex-direction:column;gap:10px;}
+.head{display:flex;justify-content:space-between;align-items:center;}
+.list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;}
+.empty{font-size:.85rem;opacity:.7;margin:0;}

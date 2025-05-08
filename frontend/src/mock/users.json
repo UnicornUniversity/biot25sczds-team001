@@ -1,0 +1,47 @@
+[
+  {
+    "_id": "user001",
+    "name": "user1",
+    "loginName": "user1@example.com",
+    "password": "$2b$12$abcdefghijk",
+    "favouriteDoors": [ "door0010", "door0004", "door0009" ],
+    "createdAt": "2025-01-01T00:00:00Z",
+    "updatedAt": "2025-04-01T00:00:00Z"
+  },
+  {
+    "_id": "user002",
+    "name": "user2",
+    "loginName": "user2@example.com",
+    "password": "$2b$12$abcdefghijk",
+    "favouriteDoors": [ "door0006", "door0008", "door0003" ],
+    "createdAt": "2025-01-02T00:00:00Z",
+    "updatedAt": "2025-04-02T00:00:00Z"
+  },
+  {
+    "_id": "user003",
+    "name": "user3",
+    "loginName": "user3@example.com",
+    "password": "$2b$12$abcdefghijk",
+    "favouriteDoors": [ "door0005", "door0007", "door0004" ],
+    "createdAt": "2025-01-03T00:00:00Z",
+    "updatedAt": "2025-04-03T00:00:00Z"
+  },
+  {
+    "_id": "user004",
+    "name": "user4",
+    "loginName": "user4@example.com",
+    "password": "$2b$12$abcdefghijk",
+    "favouriteDoors": [ "door0006", "door0009", "door0005" ],
+    "createdAt": "2025-01-04T00:00:00Z",
+    "updatedAt": "2025-04-04T00:00:00Z"
+  },
+  {
+    "_id": "user005",
+    "name": "user5",
+    "loginName": "user5@example.com",
+    "password": "$2b$12$abcdefghijk",
+    "favouriteDoors": [ "door0001", "door0006", "door0005" ],
+    "createdAt": "2025-01-05T00:00:00Z",
+    "updatedAt": "2025-04-05T00:00:00Z"
+  }
+]

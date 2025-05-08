@@ -1,47 +1,49 @@
+// src/dao/gatewayDao.js
+
 const Gateway = require("../models/Gateway");
 
 const gatewayDao = {
-    create: async (uuObject) => {
-        return await new Gateway(uuObject).save();
-    },
+  // Vytvoří novou gateway
+  create: async (obj) => {
+    return await new Gateway(obj).save();
+  },
 
-    get: async (filter) => {
-        return await Gateway.findOne(filter);
-    },
+  // Najde gateway podle primárního klíče
+  getById: async (id) => {
+    return await Gateway.findById(id);
+  },
 
-    getById: async (_id) => {
-        return await Gateway.findById(_id);
-    },
+  // **NOVĚ**: najde jednu gateway podle libovolného filtru
+  getByFilter: async (filter) => {
+    return await Gateway.findOne(filter);
+  },
 
-    list: async ({page = 1, pageSize = 10, ownerId, buildingId, created}) => {
-        const skip = (page - 1) * pageSize;
-        const query = {};
-        if (ownerId) query.ownerId = ownerId;
-        if (buildingId) query.buildingId = buildingId;
-        if (created !== undefined) query.created = created;
+  // Vrátí stránkovaný seznam
+  list: async ({ page = 1, pageSize = 10, ownerId, buildingId, created }) => {
+    const skip  = (page - 1) * pageSize;
+    const query = {};
+    if (ownerId    ) query.ownerId    = ownerId;
+    if (buildingId ) query.buildingId = buildingId;
+    if (created !== undefined) query.created = created;
 
-        const itemList = await Gateway.find(query).skip(skip).limit(pageSize);
-        const total = await Gateway.countDocuments(query);
+    const itemList = await Gateway.find(query).skip(skip).limit(pageSize);
+    const total    = await Gateway.countDocuments(query);
+    return {
+      itemList,
+      pageInfo: { page, pageSize, total, totalPages: Math.ceil(total / pageSize) }
+    };
+  },
 
-        return {
-            itemList,
-            pageInfo: {
-                page,
-                pageSize,
-                total,
-                totalPages: Math.ceil(total / pageSize),
-            },
-        };
-    },
+  // Vrátí všechny vytvořené gateway bez přiřazené budovy
+  getAvailableGateways: async (ownerId) => {
+    return await Gateway.find({ ownerId, created: true, buildingId: null });
+  },
 
-    updateById: async (_id, updateData) => {
-        updateData.updatedAt = new Date();
-        return await Gateway.findByIdAndUpdate(_id, updateData, {new: true});
-    },
-
-    deleteById: async (_id) => {
-        return await Gateway.findByIdAndDelete(_id);
-    },
+  // Aktualizuje gateway
+  updateById: async (id, updateData) => {
+    updateData.updatedAt = new Date();
+    return await Gateway.findByIdAndUpdate(id, updateData, { new: true });
+  },
 };
 
 module.exports = gatewayDao;

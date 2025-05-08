@@ -1,0 +1,17 @@
+.btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: var(--color-success);
+    color: #fff;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: box-shadow 0.2s;
+  }
+  .btn:hover {
+    box-shadow: 0 0 0 4px rgba(39, 174, 96, 0.25);
+  }

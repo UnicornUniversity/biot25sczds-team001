@@ -1,0 +1,14 @@
+.page {
+    padding: 88px 24px 40px;  /* 64 header + 24 odsazení */
+    max-width: 960px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 26px;
+  }
+  
+  .title {
+    font-size: 1.9rem;
+    font-weight: 700;
+    text-align: center;
+  }

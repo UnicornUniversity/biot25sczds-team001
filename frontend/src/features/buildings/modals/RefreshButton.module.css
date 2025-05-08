@@ -1,0 +1,8 @@
+.btn{
+    background:none; border:none; cursor:pointer;
+    font-size:1.2rem; color:var(--color-success);
+    display:flex; align-items:center; justify-content:center;
+    transition:transform .18s;
+  }
+  .btn:hover{ transform:rotate(90deg) scale(1.1); }
+  .icon{pointer-events:none;}

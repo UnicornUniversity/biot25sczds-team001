@@ -1,0 +1,9 @@
+.circle{
+    background:transparent; border:none; cursor:pointer;
+    font-size:1.4rem; color:var(--foreground);
+    transition:transform .25s, color .25s;
+  }
+  .circle:hover{
+    transform:scale(1.3);
+    color:#27AE60;
+  }

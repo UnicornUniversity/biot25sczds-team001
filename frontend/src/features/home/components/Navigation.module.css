@@ -1,0 +1,29 @@
+.nav {
+    display: flex;
+    justify-content: center;
+    gap: var(--nav-spacing);
+    margin: 2rem 0;           /* odsazení od shora a hlavního obsahu */
+  }
+  
+  .link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: var(--foreground);
+    transition: transform 0.2s;
+  }
+  
+  .link:hover {
+    transform: scale(1.15);
+  }
+  
+  .icon {
+    /* pevná větší velikost ikony */
+    font-size: 64px !important;
+    margin-bottom: 4px;
+  }
+  
+  .label {
+    font-size: 16px;
+    font-weight: 600;
+  }

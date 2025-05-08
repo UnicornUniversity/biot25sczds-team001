@@ -1,0 +1,12 @@
+.btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 24px;
+    color: var(--foreground);
+    transition: transform 0.2s;
+  }
+  
+  .btn:hover {
+    transform: translateY(-4px) scale(1.1);
+  }

@@ -1,0 +1,13 @@
+.page{
+    padding:88px 24px 40px;     /* navazuje na 64 px header */
+    max-width:960px;
+    margin:0 auto;
+    display:flex;
+    flex-direction:column;
+    gap:28px;
+  }
+  .title{
+    font-size:1.9rem;
+    font-weight:700;
+    text-align:center;
+  }

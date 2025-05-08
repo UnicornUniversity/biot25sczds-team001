@@ -1,0 +1,14 @@
+.wrapper{display:flex; flex-direction:column; gap:6px;}
+.label  {font-size:.92rem;}
+
+.select{
+  width:100%;
+  padding:10px 12px;
+  border:1px solid var(--gray-alpha-200);
+  border-radius:8px;
+  background:inherit; color:inherit;
+  cursor:pointer;
+  transition:border-color .18s, box-shadow .25s;
+}
+.select:hover   {border-color:var(--color-info);}
+.select:focus   {border-color:var(--color-success); box-shadow:0 0 0 2px rgba(39,174,96,.35);}

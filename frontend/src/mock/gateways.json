@@ -1,0 +1,58 @@
+[
+  {
+    "_id": "gw001",
+    "ownerId": "user003",
+    "buildingId": "bld001",
+    "name": "GW‑001",
+    "description": "Gateway 1",
+    "created": true,
+    "createdAt": "2025‑02‑01T00:00:00Z",
+    "updatedAt": "2025‑04‑01T00:00:00Z"
+  },
+  {
+    "_id": "gw002",
+    "ownerId": "user002",
+    "buildingId": "bld002",
+    "name": "GW‑002",
+    "description": null,
+    "created": true,
+    "createdAt": "2025‑02‑02T00:00:00Z",
+    "updatedAt": "2025‑04‑02T00:00:00Z"
+  },
+  {
+    "_id": "gw003",
+    "ownerId": "user004",
+    "buildingId": "bld003",
+    "name": "GW‑003",
+    "description": "Gateway 3",
+    "created": true,
+    "createdAt": "2025‑02‑03T00:00:00Z",
+    "updatedAt": "2025‑04‑03T00:00:00Z"
+  },
+  {
+    "_id": "gw004",
+    "ownerId": "user004",
+    "buildingId": "bld004",
+    "name": "GW‑004",
+    "description": null,
+    "created": true,
+    "createdAt": "2025‑02‑04T00:00:00Z",
+    "updatedAt": "2025‑04‑04T00:00:00Z"
+  },
+  {
+    "_id": "gw005",
+    "ownerId": "user003",
+    "buildingId": "bld005",
+    "name": "GW‑005",
+    "description": "Gateway 5",
+    "created": true,
+    "createdAt": "2025‑02‑05T00:00:00Z",
+    "updatedAt": "2025‑04‑05T00:00:00Z"
+  },
+
+  { "_id": "gw006", "ownerId": "user001", "buildingId": null, "name": "GW‑006", "description": null, "created": false },
+  { "_id": "gw007", "ownerId": "user001", "buildingId": null, "name": "GW‑007", "description": null, "created": false },
+  { "_id": "gw008", "ownerId": "user002", "buildingId": null, "name": "GW‑008", "description": null, "created": false },
+  { "_id": "gw009", "ownerId": "user003", "buildingId": null, "name": "GW‑009", "description": null, "created": false },
+  { "_id": "gw010", "ownerId": "user004", "buildingId": null, "name": "GW‑010", "description": null, "created": false }
+]

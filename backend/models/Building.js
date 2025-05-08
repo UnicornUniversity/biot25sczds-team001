@@ -2,10 +2,6 @@
 
 const objektSchema = new mongoose.Schema(
     {
-        _id: {
-            type: String,
-            required: true,
-        },
         name: {
             type: String,
             required: true,
@@ -29,7 +25,6 @@ const objektSchema = new mongoose.Schema(
         },
     },
     {
-        _id: false,
         timestamps: {createdAt: "createdAt", updatedAt: "updatedAt"},
     }
 );

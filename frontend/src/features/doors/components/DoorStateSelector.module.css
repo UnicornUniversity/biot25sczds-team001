@@ -1,0 +1,57 @@
+/* src/features/doors/components/DoorStateSelector.module.css */
+.wrapper {
+    position: relative;
+    display: inline-block;
+  }
+  
+  .toggle {
+    background: none;
+    border: none;
+    padding: 4px;
+    cursor: pointer;
+  }
+  
+  .icon {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+  
+  .menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 4px;
+    margin-top: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    z-index: 10;
+    min-width: 8rem;
+  
+    list-style: none;    /* odstraní puntíky */
+    padding: 0;          /* odstraní odsazení */
+    margin: 0;           /* odstraní odsazení */
+  }
+  
+  .menu li {
+    list-style: none;    /* případně i tady */
+  }
+  
+  .item {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 8px;
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+  
+  .item:hover {
+    background: #3a3a3a;
+  }
+  
+  .label {
+    margin-left: 8px;
+    font-size: 0.9rem;
+  }

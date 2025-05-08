@@ -2,10 +2,6 @@
 
 const dvereSchema = new mongoose.Schema(
     {
-        _id: {
-            type: String,
-            required: true,
-        },
         buildingId: {
             type: String,
             required: true,
@@ -21,11 +17,12 @@ const dvereSchema = new mongoose.Schema(
         },
         locked: {
             type: Boolean,
-            default: true,
+            default: false,
         },
         state: {
             type: String,
             enum: ["safe", "alert", "inactive"],
+            default: "safe",
             required: true,
         },
         createdAt: {
@@ -38,7 +35,6 @@ const dvereSchema = new mongoose.Schema(
         },
     },
     {
-        _id: false,
         timestamps: {createdAt: "createdAt", updatedAt: "updatedAt"},
     }
 );

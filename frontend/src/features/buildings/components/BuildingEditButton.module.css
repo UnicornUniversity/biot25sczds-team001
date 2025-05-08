@@ -1,0 +1,9 @@
+.btn {
+    background: transparent;
+    border: none;
+    color: var(--color-info);
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: transform 0.15s;
+  }
+  .btn:hover { transform: scale(1.2); }

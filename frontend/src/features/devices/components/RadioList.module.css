@@ -1,0 +1,4 @@
+/* RadioList.module.css */
+.wrapper{width:100%;}
+.head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+.list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:16px;}

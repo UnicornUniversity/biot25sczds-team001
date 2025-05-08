@@ -1,130 +1,311 @@
-﻿const express = require("express");
-const router = express.Router();
-const doorDao = require("../dao/doorDao");
-const validate = require("../middleware/validate");
-const authenticateToken = require("../middleware/authTokenValidation");
-const Joi = require("joi");
+﻿const express   = require("express");
+const router    = express.Router();
+const doorDao     = require("../dao/doorDao");
+const buildingDao = require("../dao/buildingDao");
+const deviceDao   = require("../dao/deviceDao");
+const validate    = require("../middleware/validate");
+const auth        = require("../middleware/authTokenValidation");
+const Joi         = require("joi");
+const User        = require("../models/User");     
+const Door         = require("../models/Door"); 
 
 // Validation schemas
 const createDoorSchema = Joi.object({
-    _id: Joi.string(),
     buildingId: Joi.string().required(),
-    name: Joi.string().required(),
-    description: Joi.string().allow("", null),
-    locked: Joi.boolean().default(true),
-    state: Joi.string().valid("safe", "alert", "inactive").default("safe"),
-});
+    deviceId:   Joi.string().allow("", null).optional(),
+    name:       Joi.string().required(),
+    description:Joi.string().allow("", null),
+    locked:     Joi.boolean().default(false),
+    state:      Joi.string().valid("safe","alert","inactive").default("safe"),
+  });
+  const updateDoorSchema = Joi.object({
+    buildingId: Joi.string().optional(),
+    deviceId:   Joi.string().allow("", null).optional(),
+    name:        Joi.string().optional(),
+    description: Joi.string().allow("", null).optional(),
+    locked:      Joi.boolean().optional(),
+    state:       Joi.string().valid("safe","alert","inactive").optional(),
+  }).min(1);
 
-const updateDoorSchema = Joi.object({
-    name: Joi.string(),
-    description: Joi.string().allow("", null),
-    buildingId: Joi.string(),
-    locked: Joi.boolean(),
-    state: Joi.string().valid("safe", "alert", "inactive")
-}).min(1);
+// zde nahoře po importech přidejte:
+const toggleStateSchema = Joi.object({
+    state: Joi.string().valid("safe", "alert", "inactive").required(),
+  });
+  
 
-// List doors for a specific building
-router.get("/buildings/:buildingId/doors", authenticateToken, async (req, res) => {
-    try {
-        const {page = 1, pageSize = 10} = req.query;
-        const result = await doorDao.list({
-            page: parseInt(page),
-            pageSize: parseInt(pageSize),
-            buildingId: req.params.buildingId,
+// ─── FETCH CURRENT USER’S FAVOURITE DOORS ────────────────────
+// Must come *before* the "/doors/:id" route
+router.get(
+    "/doors/favourites",
+    auth,
+    async (req, res) => {
+      try {
+        const u = await User.findById(req.user.id);
+        if (!u) return res.status(404).json({ message: "User not found" });
+        const favIds = u.favouriteDoors || [];
+        const favDoors = await Door.find({ _id: { $in: favIds } });
+        return res.json({ message: "Favourites fetched", data: favDoors });
+      } catch (err) {
+        return res.status(500).json({ message: err.message });
+      }
+    }
+  );
+
+router.get(
+    "/buildings/:buildingId/doors",
+    auth,
+    async (req, res) => {
+      try {
+        const ownerId  = req.user.id;
+        const building = await buildingDao.get({
+          _id: req.params.buildingId,
+          ownerId,
         });
-        res.json(result);
-    } catch (err) {
-        res.status(500).json({message: err.message});
+        if (!building) return res.status(404).json({ message: "Building not found" });
+  
+        const page     = parseInt(req.query.page, 10)     || 1;
+        const pageSize = parseInt(req.query.pageSize, 10) || 10;
+        const result   = await doorDao.list({
+          page, pageSize, buildingId: req.params.buildingId
+        });
+  
+        // načteme oblíbené dveře uživatele
+        const user = await User.findById(ownerId);
+        const favs = user ? user.favouriteDoors : [];
+  
+        res.json({
+          itemList:       result.itemList,
+          pageInfo:       result.pageInfo,
+          favouriteDoors: favs,
+        });
+      } catch (err) {
+        res.status(500).json({ message: err.message });
+      }
     }
-});
+  );
 
-// Fetch one door by ID
-router.get("/doors/:id", authenticateToken, async (req, res) => {
+// Create door
+router.post(
+  "/doors",
+  auth,
+  validate(createDoorSchema),
+  async (req, res) => {
     try {
-        const door = await doorDao.get({_id: req.params.id});
-        if (!door) return res.status(404).json({message: "Door not found"});
-        res.json(door);
+      const ownerId = req.user.id;
+      const { buildingId, deviceId, name, description, locked, state } = req.body;
+      const building = await buildingDao.get({ _id: buildingId, ownerId });
+      if (!building) return res.status(404).json({ message: "Building not found" });
+      // create
+      const door = await doorDao.create({ buildingId, name, description, locked, state });
+      // attach device
+      if (deviceId) {
+        await deviceDao.updateById(deviceId, { doorId: door._id }, ownerId);
+      }
+      res.status(201).json({ message: "Door created", data: door });
     } catch (err) {
-        res.status(500).json({message: err.message});
+      res.status(400).json({ message: err.message });
     }
-});
+  }
+);
 
-// Create a new door
-router.post("/doors", validate(createDoorSchema), authenticateToken, async (req, res) => {
+// Get single door
+router.get(
+  "/doors/:id",
+  auth,
+  async (req, res) => {
     try {
-        const door = await doorDao.create(req.body);
-        res.status(201).json({message: "Door created", data: door});
+      const door = await doorDao.get({ _id: req.params.id });
+      if (!door) return res.status(404).json({ message: "Door not found" });
+      const ownerId = req.user.id;
+      const building = await buildingDao.get({ _id: door.buildingId, ownerId });
+      if (!building) return res.status(403).json({ message: "Access denied" });
+      // fetch attached device
+      let controller = null;
+      if (door._id) {
+        const ctrlRes = await deviceDao.list({ page:1, pageSize:1, ownerId, doorId: door._id });
+        controller = ctrlRes.itemList[0] || null;
+      }
+      res.json({ message: "Door fetched", data: { door, controller } });
     } catch (err) {
-        res.status(400).json({message: err.message});
+      res.status(500).json({ message: err.message });
     }
-});
+  }
+);
 
-// Update a door by ID
-router.put("/doors/:id", validate(updateDoorSchema), authenticateToken, async (req, res) => {
+// Update door
+router.put(
+  "/doors/:id",
+  auth,
+  validate(updateDoorSchema),
+  async (req, res) => {
     try {
-        const updateData = {...req.body};
-        delete updateData._id;
-        const door = await doorDao.update({_id: req.params.id, ...updateData});
-        if (!door) return res.status(404).json({message: "Door not found"});
-        res.json({message: "Door updated", data: door});
-    } catch (err) {
-        res.status(400).json({message: err.message});
-    }
-});
+      const ownerId = req.user.id;
+      const doorId = req.params.id;
 
-// Delete a door by ID
-router.delete("/doors/:id", authenticateToken, async (req, res) => {
-    try {
-        const result = await doorDao.delete(req.params.id);
-        if (!result) return res.status(404).json({message: "Door not found"});
-        res.json({message: "Door deleted"});
-    } catch (err) {
-        res.status(500).json({message: err.message});
-    }
-});
+      // load existing
+      const existing = await doorDao.get({ _id: doorId });
+      if (!existing) return res.status(404).json({ message: "Door not found" });
 
-// Toggle door state
-router.post("/doors/:id/toggle-state", authenticateToken, async (req, res) => {
-    try {
-        const door = await doorDao.toggleState(req.params.id);
-        if (!door) return res.status(404).json({message: "Door not found"});
-        res.json({message: "State toggled", data: door});
-    } catch (err) {
-        res.status(500).json({message: err.message});
-    }
-});
+      // verify building ownership
+      const buildingCheck = await buildingDao.get({ _id: existing.buildingId, ownerId });
+      if (!buildingCheck) return res.status(403).json({ message: "Access denied" });
 
-// Toggle door lock
-router.post("/doors/:id/toggle-lock", authenticateToken, async (req, res) => {
-    try {
-        const door = await doorDao.toggleLock(req.params.id);
-        if (!door) return res.status(404).json({message: "Door not found"});
-        res.json({message: "Lock toggled", data: door});
-    } catch (err) {
-        res.status(500).json({message: err.message});
-    }
-});
+      // if building changed, verify new building
+      if (req.body.buildingId && req.body.buildingId !== existing.buildingId) {
+        const newB = await buildingDao.get({ _id: req.body.buildingId, ownerId });
+        if (!newB) return res.status(404).json({ message: "New building not found" });
+      }
 
-// Toggle door favourite for the logged-in user
-router.post("/doors/:id/toggle-favourite", authenticateToken, async (req, res) => {
-    try {
-        const userId = req.user.id;
-        const updatedUser = await doorDao.toggleFavourite(userId, req.params.id);
-        res.json({message: "Favourite toggled", data: updatedUser.favouriteDoors});
-    } catch (err) {
-        res.status(500).json({message: err.message});
-    }
-});
+      // find old assigned device
+      const oldList = await deviceDao.list({ page:1, pageSize:1, ownerId, doorId });
+      const oldDeviceId = oldList.itemList.length ? oldList.itemList[0]._id : null;
+      const newDeviceId = req.body.deviceId;
 
-// Fetch logs for a door
-router.get("/doors/:id/logs", authenticateToken, async (req, res) => {
-    try {
-        const {limit = 10, offset = 0} = req.query;
-        const logs = await doorDao.getLogs(req.params.id, parseInt(limit), parseInt(offset));
-        res.json({message: "Logs fetched", data: logs});
+      // update door
+      const updatedDoor = await doorDao.update({ _id: doorId, ...req.body });
+
+      // detach old device
+      if (oldDeviceId && oldDeviceId !== newDeviceId) {
+        await deviceDao.updateById(oldDeviceId, { doorId: null }, ownerId);
+      }
+      // attach new device
+      if (newDeviceId && newDeviceId !== oldDeviceId) {
+        await deviceDao.updateById(newDeviceId, { doorId }, ownerId);
+      }
+
+      res.json({ message: "Door updated", data: updatedDoor });
     } catch (err) {
-        res.status(500).json({message: err.message});
+      res.status(400).json({ message: err.message });
     }
-});
+  }
+);
+
+// ─── DELETE A DOOR ───────────────────────────────────────────
+router.delete(
+    "/doors/:id",
+    auth,
+    async (req, res) => {
+      try {
+        const doorId  = req.params.id;
+        const ownerId = req.user.id;
+        const door     = await doorDao.get({ _id: doorId });
+        if (!door) return res.status(404).json({ message: "Door not found" });
+  
+        const building = await buildingDao.get({ _id: door.buildingId, ownerId });
+        if (!building) return res.status(403).json({ message: "Access denied" });
+  
+        // odpojení controlleru
+        const ctrlList = await deviceDao.list({ page:1, pageSize:1, ownerId, doorId });
+        if (ctrlList.itemList.length) {
+          await deviceDao.updateById(ctrlList.itemList[0]._id, { doorId: null }, ownerId);
+        }
+  
+        // odstraníme toto doorId z favouriteDoors přihlášeného uživatele
+        await User.findByIdAndUpdate(ownerId, {
+          $pull: { favouriteDoors: doorId }
+        });
+  
+        await doorDao.delete(doorId);
+        res.json({ message: "Door deleted" });
+      } catch (err) {
+        res.status(500).json({ message: err.message });
+      }
+    }
+  );
+
+
+// ─── SET DOOR STATE ────────────────────────────────────────
+router.post(
+    "/doors/:id/toggle-state",
+    auth,
+    validate(toggleStateSchema),
+    async (req, res) => {
+      try {
+        const doorId = req.params.id;
+        const { state: newState } = req.body;
+  
+        // ověření existence dveří + vlastníka
+        const door = await doorDao.get({ _id: doorId });
+        if (!door) return res.status(404).json({ message: "Door not found" });
+  
+        const ownerId  = req.user.id;
+        const building = await buildingDao.get({ _id: door.buildingId, ownerId });
+        if (!building) {
+          return res.status(403).json({ message: "Access denied" });
+        }
+  
+        // nastavíme nový stav dle požadavku
+        const updated = await doorDao.toggleState(doorId, newState);
+        res.json({ message: "State updated", data: updated });
+      } catch (err) {
+        res.status(400).json({ message: err.message });
+      }
+    }
+  );
+
+// ─── TOGGLE LOCK ────────────────────────────────────────────
+router.post(
+  "/doors/:id/toggle-lock",
+  auth,
+  async (req, res) => {
+    try {
+      const door = await doorDao.get({ _id: req.params.id });
+      if (!door) return res.status(404).json({ message: "Door not found" });
+
+      const ownerId  = req.user.id;
+      const building = await buildingDao.get({ _id: door.buildingId, ownerId });
+      if (!building) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const toggled = await doorDao.toggleLock(req.params.id);
+      res.json({ message: "Lock toggled", data: toggled });
+    } catch (err) {
+      res.status(500).json({ message: err.message });
+    }
+  }
+);
+
+// ─── TOGGLE FAVOURITE ────────────────────────────────────────
+router.post(
+    "/doors/:id/toggle-favourite",
+    auth,
+    async (req, res) => {
+      try {
+        const updatedFavs = await doorDao.toggleFavourite(
+          req.user.id,
+          req.params.id
+        );
+        res.json({ message: "Favourite toggled", data: updatedFavs });
+      } catch (err) {
+        res.status(500).json({ message: err.message });
+      }
+    }
+  );
+
+// ─── FETCH DOOR LOGS ────────────────────────────────────────
+router.get(
+  "/doors/:id/logs",
+  auth,
+  async (req, res) => {
+    try {
+      const door = await doorDao.get({ _id: req.params.id });
+      if (!door) return res.status(404).json({ message: "Door not found" });
+
+      const ownerId  = req.user.id;
+      const building = await buildingDao.get({ _id: door.buildingId, ownerId });
+      if (!building) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const limit  = parseInt(req.query.limit, 10)  || 10;
+      const offset = parseInt(req.query.offset, 10) || 0;
+      const logs   = await doorDao.getLogs(req.params.id, limit, offset);
+      res.json({ message: "Logs fetched", data: logs });
+    } catch (err) {
+      res.status(500).json({ message: err.message });
+    }
+  }
+);
 
 module.exports = router;

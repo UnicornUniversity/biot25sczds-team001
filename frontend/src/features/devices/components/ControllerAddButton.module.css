@@ -1,0 +1,13 @@
+/* ControllerAddButton.module.css */
+.btn{
+    display:flex;align-items:center;justify-content:center;
+    width:34px;height:34px;
+    border-radius:50%;
+    border:none;
+    background:var(--color-success);
+    color:#fff;
+    font-size:1.05rem;
+    cursor:pointer;
+    transition:box-shadow .2s;
+  }
+  .btn:hover{box-shadow:0 0 0 4px rgba(39,174,96,.25);}

@@ -1,0 +1,15 @@
+.wrapper{ display:flex; flex-direction:column; gap:6px; }
+.label{ font-size:.92rem; }
+
+.field{ display:flex; align-items:center; gap:6px; }
+.icon{ font-size:1.05rem; color:var(--color-info); }
+
+.select{
+  flex:1;
+  padding:9px 10px;
+  border:1px solid var(--gray-alpha-200);
+  border-radius:8px;
+  background:inherit; color:inherit;
+  cursor:pointer; transition:border-color .2s;
+}
+.select:hover{ border-color:var(--color-info); }

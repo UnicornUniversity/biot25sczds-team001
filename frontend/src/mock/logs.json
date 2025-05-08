@@ -1,0 +1,242 @@
+[
+  {
+    "_id": "log001",
+    "doorId": "door0003",
+    "severity": "error",
+    "message": "Info event message #1",
+    "createdAt": "2025-04-01T01:00:00Z",
+    "updatedAt": "2025-04-01T01:00:00Z"
+  },
+  {
+    "_id": "log002",
+    "doorId": "door0007",
+    "severity": "error",
+    "message": "Warning event message #2",
+    "createdAt": "2025-04-01T02:00:00Z",
+    "updatedAt": "2025-04-01T02:00:00Z"
+  },
+  {
+    "_id": "log003",
+    "doorId": "door0006",
+    "severity": "success",
+    "message": "Warning event message #3",
+    "createdAt": "2025-04-01T03:00:00Z",
+    "updatedAt": "2025-04-01T03:00:00Z"
+  },
+  {
+    "_id": "log004",
+    "doorId": "door0008",
+    "severity": "success",
+    "message": "Warning event message #4",
+    "createdAt": "2025-04-01T04:00:00Z",
+    "updatedAt": "2025-04-01T04:00:00Z"
+  },
+  {
+    "_id": "log005",
+    "doorId": "door0007",
+    "severity": "warning",
+    "message": "Info event message #5",
+    "createdAt": "2025-04-01T05:00:00Z",
+    "updatedAt": "2025-04-01T05:00:00Z"
+  },
+  {
+    "_id": "log006",
+    "doorId": "door0005",
+    "severity": "error",
+    "message": "Info event message #6",
+    "createdAt": "2025-04-01T06:00:00Z",
+    "updatedAt": "2025-04-01T06:00:00Z"
+  },
+  {
+    "_id": "log007",
+    "doorId": "door0010",
+    "severity": "info",
+    "message": "Success event message #7",
+    "createdAt": "2025-04-01T07:00:00Z",
+    "updatedAt": "2025-04-01T07:00:00Z"
+  },
+  {
+    "_id": "log008",
+    "doorId": "door0008",
+    "severity": "success",
+    "message": "Error event message #8",
+    "createdAt": "2025-04-01T08:00:00Z",
+    "updatedAt": "2025-04-01T08:00:00Z"
+  },
+  {
+    "_id": "log009",
+    "doorId": "door0008",
+    "severity": "warning",
+    "message": "Error event message #9",
+    "createdAt": "2025-04-01T09:00:00Z",
+    "updatedAt": "2025-04-01T09:00:00Z"
+  },
+  {
+    "_id": "log010",
+    "doorId": "door0005",
+    "severity": "success",
+    "message": "Error event message #10",
+    "createdAt": "2025-04-01T10:00:00Z",
+    "updatedAt": "2025-04-01T10:00:00Z"
+  },
+  {
+    "_id": "log011",
+    "doorId": "door0007",
+    "severity": "warning",
+    "message": "Success event message #11",
+    "createdAt": "2025-04-01T11:00:00Z",
+    "updatedAt": "2025-04-01T11:00:00Z"
+  },
+  {
+    "_id": "log012",
+    "doorId": "door0008",
+    "severity": "success",
+    "message": "Success event message #12",
+    "createdAt": "2025-04-01T12:00:00Z",
+    "updatedAt": "2025-04-01T12:00:00Z"
+  },
+  {
+    "_id": "log013",
+    "doorId": "door0007",
+    "severity": "success",
+    "message": "Info event message #13",
+    "createdAt": "2025-04-01T13:00:00Z",
+    "updatedAt": "2025-04-01T13:00:00Z"
+  },
+  {
+    "_id": "log014",
+    "doorId": "door0004",
+    "severity": "warning",
+    "message": "Error event message #14",
+    "createdAt": "2025-04-01T14:00:00Z",
+    "updatedAt": "2025-04-01T14:00:00Z"
+  },
+  {
+    "_id": "log015",
+    "doorId": "door0002",
+    "severity": "warning",
+    "message": "Success event message #15",
+    "createdAt": "2025-04-01T15:00:00Z",
+    "updatedAt": "2025-04-01T15:00:00Z"
+  },
+  {
+    "_id": "log016",
+    "doorId": "door0001",
+    "severity": "error",
+    "message": "Warning event message #16",
+    "createdAt": "2025-04-01T16:00:00Z",
+    "updatedAt": "2025-04-01T16:00:00Z"
+  },
+  {
+    "_id": "log017",
+    "doorId": "door0005",
+    "severity": "error",
+    "message": "Info event message #17",
+    "createdAt": "2025-04-01T17:00:00Z",
+    "updatedAt": "2025-04-01T17:00:00Z"
+  },
+  {
+    "_id": "log018",
+    "doorId": "door0002",
+    "severity": "success",
+    "message": "Success event message #18",
+    "createdAt": "2025-04-01T18:00:00Z",
+    "updatedAt": "2025-04-01T18:00:00Z"
+  },
+  {
+    "_id": "log019",
+    "doorId": "door0002",
+    "severity": "success",
+    "message": "Info event message #19",
+    "createdAt": "2025-04-01T19:00:00Z",
+    "updatedAt": "2025-04-01T19:00:00Z"
+  },
+  {
+    "_id": "log020",
+    "doorId": "door0006",
+    "severity": "warning",
+    "message": "Warning event message #20",
+    "createdAt": "2025-04-01T20:00:00Z",
+    "updatedAt": "2025-04-01T20:00:00Z"
+  },
+  {
+    "_id": "log021",
+    "doorId": "door0007",
+    "severity": "info",
+    "message": "Success event message #21",
+    "createdAt": "2025-04-01T21:00:00Z",
+    "updatedAt": "2025-04-01T21:00:00Z"
+  },
+  {
+    "_id": "log022",
+    "doorId": "door0005",
+    "severity": "error",
+    "message": "Success event message #22",
+    "createdAt": "2025-04-01T22:00:00Z",
+    "updatedAt": "2025-04-01T22:00:00Z"
+  },
+  {
+    "_id": "log023",
+    "doorId": "door0002",
+    "severity": "info",
+    "message": "Warning event message #23",
+    "createdAt": "2025-04-01T23:00:00Z",
+    "updatedAt": "2025-04-01T23:00:00Z"
+  },
+  {
+    "_id": "log024",
+    "doorId": "door0004",
+    "severity": "warning",
+    "message": "Warning event message #24",
+    "createdAt": "2025-04-02T00:00:00Z",
+    "updatedAt": "2025-04-02T00:00:00Z"
+  },
+  {
+    "_id": "log025",
+    "doorId": "door0010",
+    "severity": "info",
+    "message": "Info event message #25",
+    "createdAt": "2025-04-02T01:00:00Z",
+    "updatedAt": "2025-04-02T01:00:00Z"
+  },
+  {
+    "_id": "log026",
+    "doorId": "door0005",
+    "severity": "success",
+    "message": "Warning event message #26",
+    "createdAt": "2025-04-02T02:00:00Z",
+    "updatedAt": "2025-04-02T02:00:00Z"
+  },
+  {
+    "_id": "log027",
+    "doorId": "door0002",
+    "severity": "info",
+    "message": "Error event message #27",
+    "createdAt": "2025-04-02T03:00:00Z",
+    "updatedAt": "2025-04-02T03:00:00Z"
+  },
+  {
+    "_id": "log028",
+    "doorId": "door0005",
+    "severity": "success",
+    "message": "Success event message #28",
+    "createdAt": "2025-04-02T04:00:00Z",
+    "updatedAt": "2025-04-02T04:00:00Z"
+  },
+  {
+    "_id": "log029",
+    "doorId": "door0009",
+    "severity": "warning",
+    "message": "Error event message #29",
+    "createdAt": "2025-04-02T05:00:00Z",
+    "updatedAt": "2025-04-02T05:00:00Z"
+  },
+  {
+    "_id": "log030",
+    "doorId": "door0010",
+    "severity": "success",
+    "message": "Error event message #30",
+    "createdAt": "2025-04-02T06:00:00Z",
+    "updatedAt": "2025-04-02T06:00:00Z"
+  }
+]
