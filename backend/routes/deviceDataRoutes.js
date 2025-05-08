@@ -3,6 +3,9 @@ const router = express.Router();
 const jwt = require("jsonwebtoken");
 const Log = require("../models/Log");
 const Device = require("../models/Device");
+const Door = require("../models/Door");
+
+let clients = [];
 
 const verifyDeviceToken = (req, res, next) => {
     const authHeader = req.headers["authorization"];
@@ -17,6 +20,22 @@ const verifyDeviceToken = (req, res, next) => {
     });
 };
 
+// SSE endpoint
+router.get("/api/alerts/stream", (req, res) => {
+    res.set({
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        "Connection": "keep-alive",
+    });
+    res.flushHeaders();
+
+    clients.push(res);
+
+    req.on("close", () => {
+        clients = clients.filter(c => c !== res);
+    });
+});
+
 // POST /api/data
 router.post("/api/data", verifyDeviceToken, async (req, res) => {
     try {
@@ -29,10 +48,15 @@ router.post("/api/data", verifyDeviceToken, async (req, res) => {
         const device = await Device.findById(deviceId);
         if (!device) return res.status(404).json({message: "Device not found"});
 
+        const doorRecord = await Door.findById(device.doorId);
+        if (!doorRecord) return res.status(404).json({message: "Door not found"});
+
+        const severity = motion || door ? "warning" : "info";
+
         const log = new Log({
             _id: `log_${Date.now()}`,
             doorId: device.doorId,
-            severity: motion || door ? "warning" : "info",
+            severity,
             message: `Motion: ${motion}, Door: ${door}`,
             createdAt: new Date(timestamp),
             updatedAt: new Date(timestamp),
@@ -40,7 +64,22 @@ router.post("/api/data", verifyDeviceToken, async (req, res) => {
 
         await log.save();
 
-        // TODO: Add event
+        // Push alert IF warning AND the door is locked
+        if (severity === "warning" && doorRecord.locked) {
+            const payload = {
+                doorId: doorRecord._id,
+                severity,
+                state: doorRecord.state,
+                locked: doorRecord.locked,
+                motion,
+                door,
+                timestamp,
+            };
+
+            clients.forEach(client =>
+                client.write(`data: ${JSON.stringify(payload)}\n\n`)
+            );
+        }
 
         res.status(200).json({message: "Log created", data: log});
     } catch (err) {
