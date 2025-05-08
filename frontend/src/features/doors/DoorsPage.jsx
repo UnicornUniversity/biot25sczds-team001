@@ -1,4 +1,3 @@
-/* src/features/doors/DoorsPage.jsx */
 'use client';
 
 import { useState } from 'react';
@@ -14,6 +13,9 @@ export default function DoorsPage({ buildingId }) {
     doors,
     userFavs,
     controllers,
+    pageInfo,
+    nextPage,
+    prevPage,
     fetchDoorDetail,
     addDoor,
     updateDoor,
@@ -51,6 +53,9 @@ export default function DoorsPage({ buildingId }) {
         onToggleLock={toggleLock}
         onToggleFav={toggleFavourite}
         onChangeState={changeState}
+        pageInfo={pageInfo}
+        nextPage={nextPage}
+        prevPage={prevPage}
       />
 
       {addOpen && (

@@ -1,4 +1,3 @@
-/* src/features/doors/components/DoorsList.jsx */
 'use client';
 
 import React from 'react';
@@ -16,12 +15,16 @@ export default function DoorsList({
   onToggleFav,
   onToggleLock,
   onChangeState,
+  pageInfo,
+  nextPage,
+  prevPage,
 }) {
   return (
     <section className={cls.wrapper}>
       <div className={cls.head}>
         {showAdd && <DoorAddButton onClick={onAdd} />}
       </div>
+
       <ul className={cls.list}>
         {doors.map(d => (
           <Door
@@ -37,6 +40,26 @@ export default function DoorsList({
           />
         ))}
       </ul>
+
+      <div className={cls.pagination}>
+        <button
+          className={cls.pageBtn}
+          onClick={prevPage}
+          disabled={pageInfo.page === 1}
+        >
+          ‹ Předchozí
+        </button>
+        <span className={cls.pageInfo}>
+          Strana {pageInfo.page} z {pageInfo.totalPages}
+        </span>
+        <button
+          className={cls.pageBtn}
+          onClick={nextPage}
+          disabled={pageInfo.page === pageInfo.totalPages}
+        >
+          Další ›
+        </button>
+      </div>
     </section>
   );
 }

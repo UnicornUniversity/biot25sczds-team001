@@ -1,4 +1,3 @@
-// src/features/doors/FavouritePage.jsx
 'use client';
 
 import { useState } from 'react';
@@ -12,19 +11,22 @@ export default function FavouritePage() {
   // passing `null` makes the hook call GET /doors/favourites
   const {
     doors,                 // only your favourite doors
-    userFavs,              // up-to-date favourite‐IDs array
+    userFavs,              // up-to-date favourite IDs array
     controllers,           // for the edit modal
+    pageInfo,              // pagination info
+    nextPage,              // pagination controls
+    prevPage,
     fetchDoorDetail,
     updateDoor,
     deleteDoor,
     toggleLock,
     toggleFavourite,
     resetState,
-    changeState,           // ← přidali jsme sem
+    changeState,
     fetchDoorLogs,
   } = useDoors(null);
 
-  // doors už jsou jen favs, nemusíme filtrovat
+  // on this page, `doors` are already filtered to favourites
   const favDoors = doors;
 
   const [editData, setEditData] = useState(null);
@@ -45,16 +47,18 @@ export default function FavouritePage() {
 
       <DoorsList
         doors={favDoors}
-        // tady předáváme jenom jejich vlastní ID, aby byly všechny srdíčka plná
-        userFavs={favDoors.map(d => d._id)}
+        userFavs={favDoors.map(d => d._id)}  // all hearts filled
         showAdd={false}
         onAdd={() => {}}
         onEdit={openEdit}
         onLogs={d => setLogsDoor(d)}
         onToggleLock={toggleLock}
         onToggleFav={toggleFavourite}
-        onResetState={resetState}
-        onChangeState={changeState}    // ← a tady
+        onChangeState={changeState}
+        // pass pagination controls down into DoorsList
+        pageInfo={pageInfo}
+        nextPage={nextPage}
+        prevPage={prevPage}
       />
 
       {editData && (

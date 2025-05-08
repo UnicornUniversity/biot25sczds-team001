@@ -34,35 +34,51 @@ const toggleStateSchema = Joi.object({
   });
   
 
-// NOVÝ ENDPOINT: Získat stav všech dveří uživatele
+// ─── GET /doors/status ────────────────────────────────────
+// now supports ?page=&pageSize=
 router.get(
-    "/doors/status",
+    '/doors/status',
     auth,
     async (req, res) => {
       try {
-        const ownerId = req.user.id;
+        const ownerId  = req.user.id;
+        const page     = parseInt(req.query.page, 10)     || 1;
+        const pageSize = parseInt(req.query.pageSize, 10) || 10;
   
-        // 1) načteme všechny budovy uživatele
+        // 1) load user's buildings
         const buildings = await Building.find({ ownerId });
+        const bIds = buildings.map(b => b._id);
+  
+        // 2) count total matching doors
+        const total = await Door.countDocuments({ buildingId: { $in: bIds } });
+  
+        // 3) fetch the requested page of doors
+        const docs = await Door.find({ buildingId: { $in: bIds } })
+          .skip((page - 1) * pageSize)
+          .limit(pageSize)
+          .lean();
+  
+        // 4) map into response objects + include buildingName
         const buildingMap = buildings.reduce((acc, b) => {
           acc[b._id] = b.name;
           return acc;
         }, {});
   
-        // 2) načteme všechny dveře, které k nim patří
-        const buildingIds = Object.keys(buildingMap);
-        const doors = await Door.find({ buildingId: { $in: buildingIds } });
-  
-        // 3) poskládáme response
-        const data = doors.map(d => ({
+        const data = docs.map(d => ({
           doorId:       d._id,
           doorName:     d.name,
           state:        d.state,
           buildingId:   d.buildingId,
-          buildingName: buildingMap[d.buildingId] || null
+          buildingName: buildingMap[d.buildingId],
         }));
   
-        res.json({ message: "Doors status fetched", data });
+        // 5) pageInfo
+        const totalPages = Math.ceil(total / pageSize);
+  
+        res.json({
+          itemList: data,
+          pageInfo: { page, pageSize, total, totalPages }
+        });
       } catch (err) {
         res.status(500).json({ message: err.message });
       }

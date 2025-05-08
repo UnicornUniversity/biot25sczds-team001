@@ -14,6 +14,9 @@ export default function BuildingsPage() {
     buildings,
     gateways,
     unattachedGws,
+    pageInfo,
+    nextPage,
+    prevPage,
     fetchBuilding,
     addBuilding,
     updateBuilding,
@@ -25,7 +28,7 @@ export default function BuildingsPage() {
   const [editBld, setEditBld] = useState(null);
   const [logsBld, setLogsBld] = useState(null);
 
-  // složí seznam gateway pro edit modal: volné + aktuálně přiřazená
+  // compose gateway list for edit modal
   const composeGwList = gwId => {
     const inList = unattachedGws.find(g => g._id === gwId);
     if (inList) return unattachedGws;
@@ -33,13 +36,13 @@ export default function BuildingsPage() {
     return current ? [...unattachedGws, current] : unattachedGws;
   };
 
-  // při kliknutí na Upravit: stáhni plný záznam (včetně gatewayId)
+  // on “Edit” click load full building record
   const handleEdit = async b => {
     try {
       const full = await fetchBuilding(b._id);
       setEditBld(full);
     } catch {
-      // sem můžeš přidat chybovou hlášku
+      // handle error if desired
     }
   };
 
@@ -52,6 +55,9 @@ export default function BuildingsPage() {
         onAdd={() => setAddOpen(true)}
         onEdit={handleEdit}
         onLogs={setLogsBld}
+        pageInfo={pageInfo}
+        nextPage={nextPage}
+        prevPage={prevPage}
       />
 
       {addOpen && (

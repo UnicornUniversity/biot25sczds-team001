@@ -1,35 +1,39 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '@/lib/AuthContext';
-import { useStatus } from '@/lib/StatusContext';
-import msgs from '@/lib/messages';
-import { authFetch } from '@/lib/authFetch';
+import { useAuth }    from '@/lib/AuthContext';
+import { useStatus }  from '@/lib/StatusContext';
+import msgs           from '@/lib/messages';
+import { authFetch }  from '@/lib/authFetch';
 import { API_ROUTES } from '@/lib/apiRoutes';
 
 export default function useDoors(buildingId) {
   const { run, success, error } = useStatus();
   const { user } = useAuth();
 
+  // state
   const [doors, setDoors] = useState([]);
   const [userFavs, setUserFavs] = useState([]);
   const [controllers, setControllers] = useState([]);
+  const [pageInfo, setPageInfo] = useState({
+    page: 1,
+    pageSize: 10,
+    total: 0,
+    totalPages: 1,
+  });
 
-  // 1) seed favouriteDoors from user.profile
+  // seed favourites
   useEffect(() => {
-    if (user?.favouriteDoors) {
-      setUserFavs(user.favouriteDoors);
-    }
+    if (user?.favouriteDoors) setUserFavs(user.favouriteDoors);
   }, [user]);
 
-  // 2) fetch controllers (unassigned devices)
+  // fetch controllers (unassigned)
   const fetchControllers = useCallback(
     () =>
       run(async () => {
         const gwRes = await authFetch(API_ROUTES.gateways.list({ buildingId, created: true }));
         if (!gwRes.ok) throw new Error(`GW list ${gwRes.status}`);
         const { itemList: gws } = await gwRes.json();
-
         const all = [];
         await Promise.all(
           gws.map(async gw => {
@@ -46,13 +50,14 @@ export default function useDoors(buildingId) {
     [buildingId, run, error]
   );
 
-  // 3) fetch doors (either by building or favourites endpoint)
+  // fetch doors with pagination
   const fetchDoors = useCallback(
     () =>
       run(async () => {
+        const { page, pageSize } = pageInfo;
         let res;
         if (buildingId) {
-          res = await authFetch(API_ROUTES.doors.listByBuilding(buildingId));
+          res = await authFetch(API_ROUTES.doors.listByBuilding(buildingId, page, pageSize));
         } else {
           res = await authFetch(API_ROUTES.doors.favourites);
         }
@@ -60,92 +65,84 @@ export default function useDoors(buildingId) {
         return res.json();
       }, msgs.doors.fetch)
         .then(async payload => {
-          let list, favs;
+          let list, favs, pi;
           if (buildingId) {
-            // building view
-            list = payload.itemList;
+            ({ itemList: list, pageInfo: pi } = payload);
             favs = payload.favouriteDoors;
           } else {
-            // favourites view
             list = payload.data;
             favs = user?.favouriteDoors || [];
+            pi = { page: 1, pageSize: list.length, total: list.length, totalPages: 1 };
           }
           setDoors(list);
           setUserFavs(favs || []);
+          setPageInfo(pi);
           success(msgs.doors.fetchSuccess);
           await fetchControllers();
         })
-        .catch(err =>
-          error(msgs.doors.fetchError.replace('{error}', err.message))
-        ),
-    [buildingId, run, success, error, fetchControllers, user]
+        .catch(err => error(msgs.doors.fetchError.replace('{error}', err.message))),
+    [buildingId, pageInfo.page, pageInfo.pageSize, run, success, error, fetchControllers, user]
   );
 
-  // initial load
+  // initial & when page changes
   useEffect(() => {
     fetchDoors();
   }, [fetchDoors]);
 
+  // pagination helpers
+  const nextPage = () =>
+    setPageInfo(pi => ({
+      ...pi,
+      page: Math.min(pi.page + 1, pi.totalPages)
+    }));
+  const prevPage = () =>
+    setPageInfo(pi => ({
+      ...pi,
+      page: Math.max(pi.page - 1, 1)
+    }));
+
   // 4) other door actions (create, update, delete, lock, favourite, reset) remain unchanged:
 
-  const addDoor = useCallback(
-    form =>
-      run(async () => {
-        const res = await authFetch(API_ROUTES.doors.create, {
-          method: 'POST',
-          body: JSON.stringify({ ...form, buildingId }),
-        });
-        if (!res.ok) throw new Error(`Status ${res.status}`);
-        return (await res.json()).data;
-      }, msgs.doors.create)
-        .then(async newDoor => {
-          setDoors(prev => [newDoor, ...prev]);
-          success(msgs.doors.createSuccess);
-          await fetchControllers();
-        })
-        .catch(err =>
-          error(msgs.doors.createError.replace('{error}', err.message))
-        ),
-    [buildingId, run, success, error, fetchControllers]
-  );
+  // actions without refetch
+  const addDoor = useCallback(form =>
+    run(async () => {
+      const res = await authFetch(API_ROUTES.doors.create, { method: 'POST', body: JSON.stringify({ ...form, buildingId }) });
+      if (!res.ok) throw new Error(`Status ${res.status}`);
+      return (await res.json()).data;
+    }, msgs.doors.create)
+    .then(newDoor => {
+      setDoors(prev => [newDoor, ...prev]);
+      success(msgs.doors.createSuccess);
+      return newDoor;
+    })
+    .catch(err => { error(msgs.doors.createError.replace('{error}', err.message)); throw err; })
+  , [buildingId, run, success, error]);
 
-  const updateDoor = useCallback(
-    (id, form) =>
-      run(async () => {
-        const res = await authFetch(API_ROUTES.doors.update(id), {
-          method: 'PUT',
-          body: JSON.stringify(form),
-        });
-        if (!res.ok) throw new Error(`Status ${res.status}`);
-        return (await res.json()).data;
-      }, msgs.doors.update)
-        .then(async updated => {
-          setDoors(prev => prev.map(d => (d._id === id ? updated : d)));
-          success(msgs.doors.updateSuccess);
-          await fetchDoors();
-        })
-        .catch(err =>
-          error(msgs.doors.updateError.replace('{error}', err.message))
-        ),
-    [run, success, error, fetchDoors]
-  );
+  const updateDoor = useCallback((id, form) =>
+    run(async () => {
+      const res = await authFetch(API_ROUTES.doors.update(id), { method: 'PUT', body: JSON.stringify(form) });
+      if (!res.ok) throw new Error(`Status ${res.status}`);
+      return (await res.json()).data;
+    }, msgs.doors.update)
+    .then(updated => {
+      setDoors(prev => prev.map(d => d._id===id ? updated : d));
+      success(msgs.doors.updateSuccess);
+      return updated;
+    })
+    .catch(err => { error(msgs.doors.updateError.replace('{error}', err.message)); throw err; })
+  , [run, success, error]);
 
-  const deleteDoor = useCallback(
-    id =>
-      run(async () => {
-        const res = await authFetch(API_ROUTES.doors.delete(id), { method: 'DELETE' });
-        if (!res.ok) throw new Error(`Status ${res.status}`);
-      }, msgs.doors.delete)
-        .then(async () => {
-          setDoors(prev => prev.filter(d => d._id !== id));
-          success(msgs.doors.deleteSuccess);
-          await fetchDoors();
-        })
-        .catch(err =>
-          error(msgs.doors.deleteError.replace('{error}', err.message))
-        ),
-    [run, success, error, fetchDoors]
-  );
+  const deleteDoor = useCallback(id =>
+    run(async () => {
+      const res = await authFetch(API_ROUTES.doors.delete(id), { method: 'DELETE' });
+      if (!res.ok) throw new Error(`Status ${res.status}`);
+    }, msgs.doors.delete)
+    .then(() => {
+      setDoors(prev => prev.filter(d => d._id!==id));
+      success(msgs.doors.deleteSuccess);
+    })
+    .catch(err => { error(msgs.doors.deleteError.replace('{error}', err.message)); throw err; })
+  , [run, success, error]);
 
   const toggleLock = useCallback(
     id =>
@@ -271,6 +268,9 @@ const toggleFavourite = useCallback(
     toggleFavourite,
     resetState,
     fetchDoorLogs,
+    pageInfo,
+    nextPage,
+    prevPage,
     changeState,
   };
 }
