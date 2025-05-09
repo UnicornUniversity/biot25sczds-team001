@@ -1,0 +1,186 @@
+[
+    {
+        "id": "42508314d7cbee63",
+        "type": "tab",
+        "label": "Flow 6",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "7c34c1fcec87740a",
+        "type": "ui_button",
+        "z": "42508314d7cbee63",
+        "name": "Obnovit",
+        "group": "7a546407e174194e",
+        "order": 0,
+        "width": 6,
+        "height": 1,
+        "passthru": false,
+        "label": "Obnovit záznamy",
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "className": "",
+        "icon": "",
+        "payload": "{}",
+        "payloadType": "json",
+        "topic": "",
+        "topicType": "str",
+        "x": 420,
+        "y": 440,
+        "wires": [
+            [
+                "b552a3f4bf5a56a9"
+            ]
+        ]
+    },
+    {
+        "id": "a4398573b9205b8b",
+        "type": "function",
+        "z": "42508314d7cbee63",
+        "name": "Rozdělení do tabulek",
+        "func": "const all = msg.payload\n  .filter(doc => doc.timestamp) // filtruje záznamy bez timestampu\n  .map(doc => {\n    const d = new Date(doc.timestamp);\n    return {\n      'motion-detect': doc['motion-detect'],\n      'door-movement': doc['door-movement'],\n      timestamp: d.toLocaleString(\"cs-CZ\"),\n      deviceId: doc.deviceId\n    };\n  });\n\nconst onlyMotion = all.filter(entry => entry['motion-detect'] === true);\nconst onlyDoor = all.filter(entry => entry['door-movement'] === true);\n\nreturn [\n  { payload: all },\n  { payload: onlyMotion },\n  { payload: onlyDoor }\n];\n",
+        "outputs": 3,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 860,
+        "y": 440,
+        "wires": [
+            [
+                "95353aa706cea736"
+            ],
+            [
+                "801f9746cd439123"
+            ],
+            [
+                "d177bb2736c9bd80"
+            ]
+        ]
+    },
+    {
+        "id": "95353aa706cea736",
+        "type": "ui_table",
+        "z": "42508314d7cbee63",
+        "group": "7a546407e174194e",
+        "name": "Všechny záznamy",
+        "order": 1,
+        "width": 12,
+        "height": 6,
+        "columns": [],
+        "outputs": 1,
+        "cts": true,
+        "x": 1110,
+        "y": 400,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "801f9746cd439123",
+        "type": "ui_table",
+        "z": "42508314d7cbee63",
+        "group": "7be239263fe2f129",
+        "name": "Pohyb osob",
+        "order": 1,
+        "width": 12,
+        "height": 6,
+        "columns": [],
+        "outputs": 1,
+        "cts": true,
+        "x": 1090,
+        "y": 440,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "d177bb2736c9bd80",
+        "type": "ui_table",
+        "z": "42508314d7cbee63",
+        "group": "210b98391a2a5888",
+        "name": "Pohyb dveří",
+        "order": 1,
+        "width": 12,
+        "height": 6,
+        "columns": [],
+        "outputs": 1,
+        "cts": true,
+        "x": 1090,
+        "y": 480,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "b552a3f4bf5a56a9",
+        "type": "mongodb in",
+        "z": "42508314d7cbee63",
+        "mongodb": "ecb0afa17f112903",
+        "name": "",
+        "collection": "events",
+        "operation": "find",
+        "x": 610,
+        "y": 440,
+        "wires": [
+            [
+                "a4398573b9205b8b"
+            ]
+        ]
+    },
+    {
+        "id": "7a546407e174194e",
+        "type": "ui_group",
+        "name": "Všechny záznamy",
+        "tab": "tab1",
+        "order": 1,
+        "disp": true,
+        "width": 12,
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "7be239263fe2f129",
+        "type": "ui_group",
+        "name": "Pohyb osob",
+        "tab": "tab1",
+        "order": 2,
+        "disp": true,
+        "width": 12,
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "210b98391a2a5888",
+        "type": "ui_group",
+        "name": "Pohyb dveří",
+        "tab": "tab1",
+        "order": 3,
+        "disp": true,
+        "width": 12,
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "ecb0afa17f112903",
+        "type": "mongodb",
+        "hostname": "gondola.proxy.rlwy.net",
+        "topology": "direct",
+        "connectOptions": "",
+        "port": "57112",
+        "db": "iot",
+        "name": "IoT"
+    },
+    {
+        "id": "tab1",
+        "type": "ui_tab",
+        "name": "Záznamy",
+        "icon": "dashboard",
+        "order": 1,
+        "disabled": false,
+        "hidden": false
+    }
+]

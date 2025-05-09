@@ -1,0 +1,369 @@
+[
+    {
+        "id": "c50ba404cf44a297",
+        "type": "tab",
+        "label": "Flow 1",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "93d0ed45f0b25e6a",
+        "type": "mqtt in",
+        "z": "c50ba404cf44a297",
+        "name": "Motion",
+        "topic": "node/+/pir/motion",
+        "qos": "2",
+        "datatype": "auto-detect",
+        "broker": "b293731313bc9bf8",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 190,
+        "y": 420,
+        "wires": [
+            [
+                "cbe073abeb41a734"
+            ]
+        ]
+    },
+    {
+        "id": "20fd2683d0b6b0ed",
+        "type": "mqtt in",
+        "z": "c50ba404cf44a297",
+        "name": "Door",
+        "topic": "node/+/accelerometer/velocity",
+        "qos": "2",
+        "datatype": "auto-detect",
+        "broker": "b293731313bc9bf8",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 190,
+        "y": 500,
+        "wires": [
+            [
+                "cbe073abeb41a734"
+            ]
+        ]
+    },
+    {
+        "id": "cbe073abeb41a734",
+        "type": "join",
+        "z": "c50ba404cf44a297",
+        "name": "Join data =>",
+        "mode": "custom",
+        "build": "object",
+        "property": "payload",
+        "propertyType": "msg",
+        "key": "topic",
+        "joiner": "\\n",
+        "joinerType": "str",
+        "useparts": false,
+        "accumulate": false,
+        "timeout": "",
+        "count": "2",
+        "reduceRight": false,
+        "reduceExp": "",
+        "reduceInit": "",
+        "reduceInitType": "",
+        "reduceFixup": "",
+        "x": 480,
+        "y": 460,
+        "wires": [
+            [
+                "dfb1194c1b0c7420"
+            ]
+        ]
+    },
+    {
+        "id": "dfb1194c1b0c7420",
+        "type": "rbe",
+        "z": "c50ba404cf44a297",
+        "name": "Downsampling",
+        "func": "rbe",
+        "gap": "",
+        "start": "",
+        "inout": "out",
+        "septopics": false,
+        "property": "payload",
+        "topi": "topic",
+        "x": 700,
+        "y": 460,
+        "wires": [
+            [
+                "b95633dbf17987a8"
+            ]
+        ]
+    },
+    {
+        "id": "b95633dbf17987a8",
+        "type": "function",
+        "z": "c50ba404cf44a297",
+        "name": "JSON & token",
+        "func": "const topicParts = msg.topic.split('/');\nconst deviceId = topicParts[1];\n\nconst motionKey = `node/${deviceId}/pir/motion`;\nconst doorKey = `node/${deviceId}/accelerometer/velocity`;\n\nconst motion = msg.payload[motionKey];\nconst doorMove = msg.payload[doorKey];\n\nconst now = new Date();\n\nmsg.payload = {\n  \"motion-detect\": motion,\n  \"door-movement\": doorMove,\n  \"timestamp\": now.toLocaleString(\"cs-CZ\"),\n  \"deviceId\": deviceId\n};\n\n// Vždy vložíme nějaký token – buď platný, nebo dummy\nconst token = global.get('hc_token') || \"invalid\";\n\nmsg.headers = {\n  \"Content-Type\": \"application/json\",\n  \"X-Api-Key\": token\n};\n\n// Pro jistotu – při 401 se retry payload uloží jinde, ale můžeš už tady připravit\nglobal.set('hc_retry_payload', msg.payload);\n\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 940,
+        "y": 460,
+        "wires": [
+            [
+                "082271c36f6ed816",
+                "560f620e67805497"
+            ]
+        ]
+    },
+    {
+        "id": "560f620e67805497",
+        "type": "mongodb out",
+        "z": "c50ba404cf44a297",
+        "mongodb": "ecb0afa17f112903",
+        "name": "",
+        "collection": "events",
+        "payonly": true,
+        "upsert": false,
+        "multi": false,
+        "operation": "insert",
+        "x": 1250,
+        "y": 360,
+        "wires": []
+    },
+    {
+        "id": "92c63ecf0046dc9b",
+        "type": "debug",
+        "z": "c50ba404cf44a297",
+        "name": "debug 1",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1430,
+        "y": 420,
+        "wires": []
+    },
+    {
+        "id": "082271c36f6ed816",
+        "type": "http request",
+        "z": "c50ba404cf44a297",
+        "name": "/api/data",
+        "method": "POST",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "http://localhost:3000/api/data",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 1240,
+        "y": 460,
+        "wires": [
+            [
+                "92c63ecf0046dc9b",
+                "aba70a7b42b09750"
+            ]
+        ]
+    },
+    {
+        "id": "aba70a7b42b09750",
+        "type": "function",
+        "z": "c50ba404cf44a297",
+        "name": "Status 401",
+        "func": "if (msg.statusCode === 401) {\n    // Uložíme původní payload pro opětovné odeslání\n    const lastPayload = global.get('hc_retry_payload') || msg.payload;\n    global.set('hc_retry_payload', lastPayload);\n\n    node.warn(\"Token neplatný – získávám nový.\");\n\n    // Vracíme zprávu dál do větve, která volá login\n    return msg;\n}\n\n// Token je platný, dál už nic nepotřebujeme dělat\nreturn null;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 490,
+        "y": 600,
+        "wires": [
+            [
+                "67c97dfb7e32dd02"
+            ]
+        ]
+    },
+    {
+        "id": "67c97dfb7e32dd02",
+        "type": "http request",
+        "z": "c50ba404cf44a297",
+        "name": "/api/login",
+        "method": "POST",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "http://localhost:3000/api/login",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "basic",
+        "senderr": false,
+        "headers": [],
+        "x": 780,
+        "y": 600,
+        "wires": [
+            [
+                "3f6fbef2dd2588b7",
+                "aed1bd174d3e060d"
+            ]
+        ]
+    },
+    {
+        "id": "3f6fbef2dd2588b7",
+        "type": "debug",
+        "z": "c50ba404cf44a297",
+        "name": "debug 2",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 960,
+        "y": 560,
+        "wires": []
+    },
+    {
+        "id": "a79a5d444100ee49",
+        "type": "inject",
+        "z": "c50ba404cf44a297",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 500,
+        "y": 660,
+        "wires": [
+            [
+                "67c97dfb7e32dd02"
+            ]
+        ]
+    },
+    {
+        "id": "aed1bd174d3e060d",
+        "type": "function",
+        "z": "c50ba404cf44a297",
+        "name": "Set token",
+        "func": "const token = msg.payload.token;\n\nif (!token) {\n    node.error(\"Token nebyl vrácen backendem!\");\n    return null;\n}\n\n// Uložení tokenu\nglobal.set('hc_token', token);\n\n// Kontrola, zda čeká nějaký retry payload\nconst retryPayload = global.get('hc_retry_payload');\n\nif (retryPayload) {\n    // Vymažeme retry, aby se neposílalo znovu\n    global.set('hc_retry_payload', null);\n\n    // Připravíme novou zprávu s původními daty a novým tokenem\n    msg.payload = retryPayload;\n    msg.headers = {\n        \"Content-Type\": \"application/json\",\n        \"X-Api-Key\": token\n    };\n\n    return msg;\n}\n\n// Jinak nic neposíláme dál\nreturn null;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 960,
+        "y": 640,
+        "wires": [
+            [
+                "d6b2f47e98b562cf"
+            ]
+        ]
+    },
+    {
+        "id": "d6b2f47e98b562cf",
+        "type": "http request",
+        "z": "c50ba404cf44a297",
+        "name": "/api/data",
+        "method": "POST",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "http://localhost:3000/api/data",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 1180,
+        "y": 640,
+        "wires": [
+            [
+                "4b58582a72d23d9d"
+            ]
+        ]
+    },
+    {
+        "id": "4b58582a72d23d9d",
+        "type": "debug",
+        "z": "c50ba404cf44a297",
+        "name": "debug 3",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1360,
+        "y": 640,
+        "wires": []
+    },
+    {
+        "id": "b293731313bc9bf8",
+        "type": "mqtt-broker",
+        "name": "",
+        "broker": "127.0.0.1",
+        "port": 1883,
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": 4,
+        "keepalive": 60,
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "ecb0afa17f112903",
+        "type": "mongodb",
+        "hostname": "gondola.proxy.rlwy.net",
+        "topology": "direct",
+        "connectOptions": "",
+        "port": "57112",
+        "db": "iot",
+        "name": "IoT"
+    }
+]
