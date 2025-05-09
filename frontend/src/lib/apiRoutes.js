@@ -22,8 +22,11 @@ export const API_ROUTES = {
         create:     '/buildings',
         update: id  => `/buildings/${id}`,
         delete: id  => `/buildings/${id}`,
-        logs:   (id, limit = 10, offset = 0) =>
-          `/buildings/${id}/logs?limit=${limit}&offset=${offset}`,
+        logs: (buildingId, page = 1, pageSize = 10, severity = '') => {
+            let q = `?page=${page}&pageSize=${pageSize}`;
+            if (severity) q += `&severity=${severity}`;
+            return `/logs/building/${buildingId}${q}`;
+          },
       },
   
       doors: {
@@ -77,17 +80,19 @@ export const API_ROUTES = {
         available:  '/devices/available-controllers',// query ?gatewayId=
       },
   
-    logs: {
-      list: (options = {}) => {
-        const { page = 1, pageSize = 10, relatedDoor = '', severity = '' } = options;
-        let qs = `?page=${page}&pageSize=${pageSize}`;
-        if (relatedDoor) qs += `&relatedDoor=${relatedDoor}`;
-        if (severity) qs += `&severity=${severity}`;
-        return `/logs${qs}`;
+      logs: {
+        list: (options = {}) => {
+          const { page = 1, pageSize = 10, relatedDoor = '', severity = '' } = options;
+          let qs = `?page=${page}&pageSize=${pageSize}`;
+          if (relatedDoor) qs += `&relatedDoor=${relatedDoor}`;
+          if (severity)    qs += `&severity=${severity}`;
+          return `/logs${qs}`;
+        },
+        create: '/log/create',
+        listByUser: (ownerId, page = 1, pageSize = 10, severity = '') => {
+          let qs = `?page=${page}&pageSize=${pageSize}`;
+          if (severity) qs += `&severity=${severity}`;
+          return `/logs/user${qs}`;  // ownerId is inferred from token on backend
+        },
       },
-      create: '/log/create',
-      listByUser: (ownerId, limit = 10, offset = 0) =>
-        `/logs/user/${ownerId}?limit=${limit}&offset=${offset}`
-    }
-  };
-  
+    };

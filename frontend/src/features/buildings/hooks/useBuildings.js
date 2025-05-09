@@ -199,29 +199,22 @@ const deleteBuilding = useCallback(id =>
     })
 , [run, success, error]);
 
-  // Fetch building logs
-  const fetchBuildingLogs = useCallback(buildingId =>
-    run(
-      async () => {
-        const res = await authFetch(API_ROUTES.buildings.logs(buildingId));
-        if (!res.ok) {
-          const errBody = await res.clone().text();
-          throw new Error(`Status ${res.status}: ${errBody}`);
-        }
-        const { data } = await res.json();
-        return data;
-      },
-      msgs.buildings.fetchLogs
-    )
-    .then(logs => {
-      success(msgs.buildings.fetchLogsSuccess);
-      return logs;
-    })
-    .catch(err => {
-      error(msgs.buildings.fetchLogsError.replace('{error}', err.message));
-      throw err;
-    })
-  , [run, success, error]);
+// uvnitř src/hooks/useBuildings.js
+const fetchBuildingLogs = useCallback(
+  (buildingId, pageSize = 5, page = 1, severity = '') =>
+    run(async () => {
+      const url = API_ROUTES.buildings.logs(buildingId, page, pageSize, severity);
+      const res = await authFetch(url);
+      if (!res.ok) throw new Error(await res.clone().text() || `Status ${res.status}`);
+      return res.json();              // { itemList, pageInfo }
+    }, msgs.buildings.fetchLogs)
+      .then(({ itemList, pageInfo }) => ({ logs: itemList, pageInfo }))
+      .catch(err => {
+        error(msgs.buildings.fetchLogsError.replace('{error}', err.message));
+        throw err;
+      }),
+  [run, error]
+);
 
   return {
     buildings,

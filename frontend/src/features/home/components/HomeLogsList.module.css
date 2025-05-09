@@ -1,23 +1,59 @@
-.container {
-    padding: 0 24px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 16px;
+.container{
+  padding:0 24px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:16px;
+}
+
+.title{
+  font-size:2rem;
+  font-weight:600;
+  margin-bottom:12px;
+  border-bottom:2px solid #ecf0f1;
+  padding-bottom:4px;
+  width:100%;
+  max-width:800px;
+}
+
+/* LIST SE SCROLLEM */
+.list{
+  width:100%;
+  max-width:800px;
+  max-height:360px;          /* libovolně – zapne overflow */
+  overflow-y:auto;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  margin:0;
+  padding:0 4px 0 0;         /* místo pro scrollbar */
+  list-style:none;
+}
+
+.actions{
+  display:flex;
+  gap:12px;
+  margin-top:16px;
+}
+
+/* Responsive adjustments */
+@media (min-width: 640px) {
+  .container {
+    padding: 0 3rem;
   }
-  
+  .title,
   .list {
-    width: 100%;
-    max-width: 800px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    margin: 0;
-    padding: 0;
-    list-style: none;
+    width: 50%;
+    max-width: none;
   }
-  
-  .actions {
-    display: flex;
-    gap: 12px;
+}
+
+@media (min-width: 1024px) {
+  .container {
+    padding: 0 4rem;
   }
+  .title,
+  .list {
+    width: 40%;
+  }
+}

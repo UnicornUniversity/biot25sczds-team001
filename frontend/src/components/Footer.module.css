@@ -4,12 +4,6 @@
     padding: 16px 24px;
   }
   
-  .topBorder {
-    height: 3px;
-    background: #333; /* separates from page content */
-    margin-bottom: 8px;
-  }
-  
   .content {
     display: flex;
     flex-direction: column;

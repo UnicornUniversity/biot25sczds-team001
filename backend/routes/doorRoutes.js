@@ -34,8 +34,7 @@ const toggleStateSchema = Joi.object({
   });
   
 
-// ─── GET /doors/status ────────────────────────────────────
-// now supports ?page=&pageSize=
+// routes/api/doorsStatus.js   (or wherever you mounted '/doors/status')
 router.get(
     '/doors/status',
     auth,
@@ -49,16 +48,20 @@ router.get(
         const buildings = await Building.find({ ownerId });
         const bIds = buildings.map(b => b._id);
   
-        // 2) count total matching doors
-        const total = await Door.countDocuments({ buildingId: { $in: bIds } });
+        // 2) define alert-only filter
+        const filter = {
+          buildingId: { $in: bIds },
+          state: 'alert'
+        };
   
-        // 3) fetch the requested page of doors
-        const docs = await Door.find({ buildingId: { $in: bIds } })
+        // 3) count & fetch only alert doors
+        const total = await Door.countDocuments(filter);
+        const docs  = await Door.find(filter)
           .skip((page - 1) * pageSize)
           .limit(pageSize)
           .lean();
   
-        // 4) map into response objects + include buildingName
+        // 4) include buildingName
         const buildingMap = buildings.reduce((acc, b) => {
           acc[b._id] = b.name;
           return acc;

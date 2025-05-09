@@ -1,130 +1,67 @@
-// src/features/home/components/HomeDoorsList.jsx
 'use client';
 
-import { useState, useEffect, useRef, useMemo } from 'react';
-import {
-  FiShield,
-  FiCheckCircle,
-  FiAlertTriangle,
-  FiMinusCircle,
-  FiChevronLeft,
-  FiChevronRight
-} from 'react-icons/fi';
-import { GiBrokenShield } from 'react-icons/gi';
+import { useEffect, useRef, useMemo } from 'react';
+import { FiShield, FiAlertTriangle } from 'react-icons/fi';
 import { gsap } from 'gsap';
 import cls from './HomeDoorsList.module.css';
 import useDoorStatus from '../hooks/useDoorStatus';
 
 export default function HomeDoorsList() {
-  const { doors, pageInfo, nextPage, prevPage } = useDoorStatus();
-  const [filter, setFilter] = useState('all');
+  const { doors } = useDoorStatus();
   const shieldRef = useRef(null);
 
-  // Animace štítu
+  /* ---------- animace štítu ---------- */
   useEffect(() => {
     const ctx = gsap.context(() => {
       gsap.to(shieldRef.current, {
+        rotationY: 360,
+        transformOrigin: '50% 50%',
+        duration: 8,
+        ease: 'linear',
         repeat: -1,
-        yoyo: true,
-        keyframes: [
-          { scale: 1.02, duration: 1, ease: 'sine.inOut' },
-          { rotate: 2, duration: 0.5, ease: 'sine.inOut' },
-          { rotate: -2, duration: 0.5, ease: 'sine.inOut' },
-        ],
       });
     }, shieldRef);
     return () => ctx.revert();
   }, []);
 
-  const hasAlert = useMemo(() => doors.some(d => d.state === 'alert'), [doors]);
-  const ShieldIcon = hasAlert ? GiBrokenShield : FiShield;
+  /* ---------- data ---------- */
+  const alertDoors = useMemo(() => doors.filter(d => d.state === 'alert'), [doors]);
+  const hasAlert   = alertDoors.length > 0;
   const shieldColor = hasAlert ? 'var(--color-error)' : 'var(--color-success)';
+  const shieldText  = hasAlert ? 'Některé dveře hlásí poplach' : 'Vše je zabezpečeno';
 
-  // Filtering
-  const filtered = useMemo(() => {
-    if (filter === 'all') return doors;
-    return doors.filter(d => d.state === filter);
-  }, [doors, filter]);
-
-  const filterOptions = [
-    { key: 'all', Icon: FiShield, color: 'var(--foreground)' },
-    { key: 'safe', Icon: FiCheckCircle, color: 'var(--color-success)' },
-    { key: 'alert', Icon: FiAlertTriangle, color: 'var(--color-error)' },
-    { key: 'inactive', Icon: FiMinusCircle, color: 'var(--gray-alpha-400)' },
-  ];
-
-  const stateIconMap = {
-    safe: { Icon: FiCheckCircle, color: 'var(--color-success)' },
-    alert: { Icon: FiAlertTriangle, color: 'var(--color-error)' },
-    inactive: { Icon: FiMinusCircle, color: 'var(--gray-alpha-400)' },
-  };
-
+  /* ---------- render ---------- */
   return (
-    <div className={cls.wrapper} style={{ borderColor: shieldColor }}>
+    <div className={cls.wrapper}>
       <div className={cls.shieldContainer}>
-        <ShieldIcon
+        <FiShield
           ref={shieldRef}
           className={cls.shieldIcon}
           style={{ color: shieldColor }}
-          aria-label={hasAlert ? 'Některé dveře v poplachu' : 'Všechny dveře v pořádku'}
+          aria-label={shieldText}
         />
+        <div className={cls.shieldText} style={{ color: shieldColor }}>
+          {shieldText}
+        </div>
       </div>
 
-      <div className={cls.content}>
-        {/* Filtry */}
-        <div className={cls.filterBtns}>
-          {filterOptions.map(opt => (
-            <button
-              key={opt.key}
-              className={`${cls.filterBtn} ${filter === opt.key ? cls.active : ''}`}
-              onClick={() => setFilter(opt.key)}
-              aria-label={opt.key}
-              style={{ color: opt.color }}
-            >
-              <opt.Icon className={cls.filterIcon} />
-            </button>
-          ))}
-        </div>
-
-        {/* Karty */}
-        <div className={cls.cards}>
-          {filtered.map(d => {
-            const { Icon, color } = stateIconMap[d.state] || stateIconMap.inactive;
-            return (
+      {hasAlert && (
+        <div className={cls.content}>
+          <div className={cls.cards}>
+            {alertDoors.map(d => (
               <a
                 key={d.doorId}
                 href={`/buildings/${d.buildingId}/doors`}
                 className={cls.card}
-                style={{ borderColor: color }}
+                style={{ borderColor: 'var(--color-error)' }}
               >
-                <Icon style={{ color, fontSize: '1.2rem' }} />
+                <FiAlertTriangle style={{ color: 'var(--color-error)', fontSize: '1.2rem' }} />
                 <div className={cls.cardText}>{d.doorName}</div>
               </a>
-            );
-          })}
+            ))}
+          </div>
         </div>
-
-        {/* Paginace */}
-        <div className={cls.pagination}>
-          <button
-            className={cls.pageBtn}
-            onClick={prevPage}
-            disabled={pageInfo.page === 1}
-            aria-label="Předchozí stránka"
-          >
-            <FiChevronLeft className={cls.pageIcon} />
-          </button>
-          <span className={cls.pageInfo}>{pageInfo.page} / {pageInfo.totalPages}</span>
-          <button
-            className={cls.pageBtn}
-            onClick={nextPage}
-            disabled={pageInfo.page === pageInfo.totalPages}
-            aria-label="Další stránka"
-          >
-            <FiChevronRight className={cls.pageIcon} />
-          </button>
-        </div>
-      </div>
+      )}
     </div>
   );
 }

@@ -6,23 +6,42 @@ import { useStatus }  from '@/lib/StatusContext';
 import msgs           from '@/lib/messages';
 import { authFetch }  from '@/lib/authFetch';
 import { API_ROUTES } from '@/lib/apiRoutes';
+import { initSocket } from '@/lib/socket';          // <‑‑ nový import
 
 export default function useDoors(buildingId) {
   const { run, success, error } = useStatus();
-  const { user } = useAuth();
+  const { user, token } = useAuth();                // token pro WS
 
-  // state
-  const [doors, setDoors] = useState([]);
-  const [userFavs, setUserFavs] = useState([]);
-  const [controllers, setControllers] = useState([]);
-  const [pageInfo, setPageInfo] = useState({
+  /* ----------------------------- state ----------------------------- */
+  const [doors,        setDoors]        = useState([]);
+  const [userFavs,     setUserFavs]     = useState([]);
+  const [controllers,  setControllers]  = useState([]);
+  const [pageInfo,     setPageInfo]     = useState({
     page: 1,
     pageSize: 10,
     total: 0,
     totalPages: 1,
   });
 
-  // seed favourites
+  /* ------------------- real‑time update ze Socket.IO ---------------- */
+  useEffect(() => {
+    if (!token) return;
+    const socket = initSocket(token);              // singleton
+
+    const onDoorState = ({ doorId, state, locked, updatedAt }) => {
+      setDoors(ds =>
+        ds.map(d => d._id === doorId
+          ? { ...d, state, locked, updatedAt }
+          : d
+        )
+      );
+    };
+
+    socket.on('door:state', onDoorState);
+    return () => socket.off('door:state', onDoorState);
+  }, [token]);
+
+  /* ----------------------- seed favourites ------------------------- */
   useEffect(() => {
     if (user?.favouriteDoors) setUserFavs(user.favouriteDoors);
   }, [user]);
