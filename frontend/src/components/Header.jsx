@@ -1,74 +1,74 @@
 'use client';
 
-import Link from 'next/link';
+import Link                           from 'next/link';
 import { useState, useRef, useEffect } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import {
-  FiShield,
-  FiMenu,
-  FiChevronDown,
-  FiUser,
-  FiLogOut,
-  FiHome,
-  FiBookOpen,
-  FiHeart,
-  FiCpu
+  FiShield, FiMenu, FiChevronDown, FiUser, FiLogOut,
+  FiHome, FiBookOpen, FiHeart, FiCpu
 } from 'react-icons/fi';
+
 import { useAuth } from '@/lib/AuthContext';
-import styles from './Header.module.css';
+import styles      from './Header.module.css';
 
 export default function Header() {
   const router       = useRouter();
   const pathname     = usePathname();
   const searchParams = useSearchParams();
   const modeParam    = searchParams.get('mode') || 'login';
+
   const { user, logout } = useAuth();
 
-  // flag, abychom věděli, že jsme se již zhydratovali na klientu
+  /* ——— hydratace ——— */
   const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
-  // dropdowny
+  /* ——— dropdowny ——— */
   const [menuOpen, setMenuOpen] = useState(false);
   const [userOpen, setUserOpen] = useState(false);
   const menuRef = useRef(null);
   const userRef = useRef(null);
 
   useEffect(() => {
-    // až klient, označím mounted
-    setMounted(true);
-
-    const handleClickOutside = e => {
-      if (menuRef.current && !menuRef.current.contains(e.target)) {
-        setMenuOpen(false);
-      }
-      if (userRef.current && !userRef.current.contains(e.target)) {
-        setUserOpen(false);
-      }
+    const close = e => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false);
+      if (userRef.current && !userRef.current.contains(e.target)) setUserOpen(false);
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('mousedown', close);
+    return () => document.removeEventListener('mousedown', close);
   }, []);
 
+  /* ——— navigace ——— */
   const navItems = [
-    { href: '/',                          label: 'Domů',     Icon: FiHome     },
-    { href: '/buildings',                 label: 'Budovy',   Icon: FiBookOpen },
-    { href: '/buildings/favourite/doors', label: 'Oblíbené', Icon: FiHeart    },
-    { href: '/devices',                   label: 'Zařízení', Icon: FiCpu      },
+    { href: '/',          label: 'Domů',       Icon: FiHome     },
+    { href: '/buildings', label: 'Budovy',     Icon: FiBookOpen },
+    { href: '/buildings/favourite/doors', label: 'Oblíbené', Icon: FiHeart },
+    { href: '/devices',   label: 'Zařízení',   Icon: FiCpu      },
   ];
 
+  /* ——— odhlášení ——— */
   const handleLogout = () => {
+    // 1) okamžitě smaž z localStorage
+    localStorage.removeItem('dg.jwt');
+    localStorage.removeItem('dg.user');
+
+    // 2) interní vyčištění kontextu
     logout();
+
+    // 3) přesměrování na login
     router.push('/auth?mode=login');
   };
 
-  // Guest button: pokud jsme na /auth?mode=login → nabídni registraci, jinak přihlášení
-  const guestHref  = pathname === '/auth' && modeParam === 'login'
+  /* ——— text & odkaz pro nepřihlášené ——— */
+  const guestHref  = pathname.startsWith('/auth') && modeParam === 'login'
     ? '/auth?mode=register'
     : '/auth?mode=login';
-  const guestLabel = pathname === '/auth' && modeParam === 'login'
+
+  const guestLabel = pathname.startsWith('/auth') && modeParam === 'login'
     ? 'Registrovat se'
     : 'Přihlásit se';
 
+  /* ——— render ——— */
   return (
     <header className={styles.header}>
       <Link href="/" className={styles.brand}>
@@ -79,12 +79,12 @@ export default function Header() {
       <div className={styles.controls}>
         {mounted && user ? (
           <>
-            {/* Jméno uživatele */}
+            {/* jméno */}
             <span className={styles.userName}>
               <FiUser className={styles.userIcon} /> {user.name}
             </span>
 
-            {/* navigační menu */}
+            {/* hlavní menu */}
             <div ref={menuRef} className={styles.menuWrapper}>
               <button
                 className={styles.menuBtn}
@@ -93,6 +93,7 @@ export default function Header() {
               >
                 <FiMenu className={styles.menuIcon} />
               </button>
+
               {menuOpen && (
                 <ul className={styles.dropdown}>
                   {navItems.map(({ href, label, Icon }) => (
@@ -111,7 +112,7 @@ export default function Header() {
               )}
             </div>
 
-            {/* uživatelské menu */}
+            {/* user menu */}
             <div ref={userRef} className={styles.menuWrapper}>
               <button
                 className={styles.userBtn}
@@ -122,10 +123,14 @@ export default function Header() {
                   className={`${styles.chevron} ${userOpen ? styles.rotate : ''}`}
                 />
               </button>
+
               {userOpen && (
                 <ul className={styles.dropdown}>
                   <li>
-                    <button className={styles.dropdownLink} onClick={handleLogout}>
+                    <button
+                      className={styles.dropdownLink}
+                      onClick={handleLogout}
+                    >
                       <FiLogOut className={styles.dropdownIcon} />
                       <span className={styles.dropdownLabel}>Odhlásit se</span>
                     </button>
@@ -135,7 +140,7 @@ export default function Header() {
             </div>
           </>
         ) : (
-          // fallback pro SSR i do doby, než se zjistí `user` na klientu
+          /* nepřihlášený stav (SSR + loading) */
           <Link href={guestHref} className={styles.loginLink}>
             {guestLabel}
           </Link>

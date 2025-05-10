@@ -1,7 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import {
+  useRouter,
+  useSearchParams,
+} from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/AuthContext';
 import styles from './AuthPage.module.css';
@@ -9,36 +12,48 @@ import styles from './AuthPage.module.css';
 export default function AuthPage() {
   const router       = useRouter();
   const searchParams = useSearchParams();
-  const mode         = searchParams.get('mode') || 'login'; // 'login' nebo 'register'
+
+  const mode     = searchParams.get('mode') || 'login';      // login | register
+  const nextUrl  = searchParams.get('next') ?? '/';          // kam se vrátit
 
   const { user, login, register } = useAuth();
-  const [form, setForm]           = useState({ name: '', loginName: '', password: '' });
-  const [error, setError]         = useState('');
 
-  // Pokud už je někdo přihlášen, přesměruj na domovskou
+  const [form,  setForm]  = useState({
+    name: '', loginName: '', password: '',
+  });
+  const [error, setError] = useState('');
+
+  /* ---------- už přihlášen ⇒ pryč z /auth --------------------------- */
   useEffect(() => {
-    if (user) router.replace('/');
-  }, [user, router]);
+    if (user) router.replace(nextUrl);
+  }, [user, router, nextUrl]);
 
-  const handleChange = e => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
+  /* ---------- formulář --------------------------------------------- */
+  function handleChange(e) {
+    setForm(f => ({ ...f, [e.target.name]: e.target.value }));
+  }
 
-  const handleSubmit = async e => {
+  async function handleSubmit(e) {
     e.preventDefault();
     setError('');
+
     try {
       if (mode === 'login') {
         await login(form.loginName, form.password);
       } else {
-        await register({ name: form.name, loginName: form.loginName, password: form.password });
+        await register({
+          name: form.name,
+          loginName: form.loginName,
+          password: form.password,
+        });
       }
-      router.replace('/');
+      router.replace(nextUrl);         // <‑‑ návrat
     } catch (err) {
       setError(err.message);
     }
-  };
+  }
 
+  /* ---------- UI ---------------------------------------------------- */
   return (
     <main className={styles.page}>
       <form className={styles.card} onSubmit={handleSubmit}>
@@ -87,14 +102,18 @@ export default function AuthPage() {
 
         <p className={styles.switch}>
           {mode === 'login' ? (
-            <>Nemáte účet?{' '}
-              <Link href="/auth?mode=register" className={styles.linkBtn}>
+            <>
+              Nemáte účet?{' '}
+              <Link href={`/auth?mode=register&next=${encodeURIComponent(nextUrl)}`}
+                    className={styles.linkBtn}>
                 Registrovat se
               </Link>
             </>
           ) : (
-            <>Máte účet?{' '}
-              <Link href="/auth?mode=login" className={styles.linkBtn}>
+            <>
+              Máte účet?{' '}
+              <Link href={`/auth?mode=login&next=${encodeURIComponent(nextUrl)}`}
+                    className={styles.linkBtn}>
                 Přihlášení
               </Link>
             </>

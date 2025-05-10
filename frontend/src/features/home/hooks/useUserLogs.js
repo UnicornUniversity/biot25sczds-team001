@@ -12,7 +12,8 @@ export default function useUserLogs(pageSize = 5) {
   const { run, success, error } = useStatus();
   const { token } = useAuth();
 
-  const [logs, setLogs]         = useState([]);
+  /* Map kvůli rychlé deduplikaci */
+  const [logMap, setLogMap]     = useState(() => new Map());
   const [pageInfo, setPageInfo] = useState({
     page: 1,
     pageSize,
@@ -20,25 +21,33 @@ export default function useUserLogs(pageSize = 5) {
     totalPages: 1,
   });
 
+  /* helper – převod Map → array, novější první */
+  const mapToArray = m =>
+    [...m.values()].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
   /* ---------- realtime log:new ---------- */
   useEffect(() => {
     if (!token) return;
     const socket = initSocket(token);
 
     const handler = newLog =>
-      setLogs(ls => [newLog, ...ls]);   // vždy připíchni navrch
+      setLogMap(m => {
+        const map = new Map(m);
+        map.set(newLog._id, newLog);     // přepíše duplicitní
+        return map;
+      });
 
     socket.on('log:new', handler);
     return () => socket.off('log:new', handler);
   }, [token]);
 
-  /* ---------- REST fetch (paginace, přidávání) ---------- */
+  /* ---------- REST fetch ---------- */
   const fetchPage = useCallback(
     async page => {
       const url = API_ROUTES.logs.listByUser(null, page, pageSize);
       const res = await authFetch(url);
       if (!res.ok) throw new Error(`Status ${res.status}`);
-      return res.json();                       // { itemList, pageInfo }
+      return res.json();   // { itemList, pageInfo }
     },
     [pageSize]
   );
@@ -47,27 +56,34 @@ export default function useUserLogs(pageSize = 5) {
   useEffect(() => {
     run(() => fetchPage(1), msgs.homeLogs.fetch)
       .then(({ itemList, pageInfo: pi }) => {
-        setLogs(itemList);
+        setLogMap(new Map(itemList.map(l => [l._id, l])));
         setPageInfo(pi);
         success(msgs.homeLogs.fetchSuccess);
       })
       .catch(err => error(msgs.homeLogs.fetchError.replace('{error}', err.message)));
   }, [fetchPage, run, success, error]);
 
-  /* načti další stránku – přilep na konec */
+  /* načti další stránku – merge unique */
   const nextPage = () => {
     if (pageInfo.page >= pageInfo.totalPages) return;
     const next = pageInfo.page + 1;
 
     run(() => fetchPage(next), msgs.homeLogs.fetch)
       .then(({ itemList }) => {
-        setLogs(ls => [...ls, ...itemList]);      // připoj
+        setLogMap(m => {
+          const map = new Map(m);
+          itemList.forEach(l => map.set(l._id, l));
+          return map;
+        });
         setPageInfo(pi => ({ ...pi, page: next }));
       })
       .catch(err => error(msgs.homeLogs.fetchError.replace('{error}', err.message)));
   };
 
-  const canLoadMore = pageInfo.page < pageInfo.totalPages;
-
-  return { logs, pageInfo, nextPage, canLoadMore };
+  return {
+    logs: mapToArray(logMap),
+    pageInfo,
+    nextPage,
+    canLoadMore: pageInfo.page < pageInfo.totalPages,
+  };
 }

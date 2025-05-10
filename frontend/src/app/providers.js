@@ -1,25 +1,27 @@
 'use client';
 
-import { AuthProvider }    from '@/lib/AuthContext';
-import { StatusProvider }  from '@/lib/StatusContext';
+import { AuthProvider }   from '@/lib/AuthContext';
+import { StatusProvider } from '@/lib/StatusContext';
 import StatusNotifications from '@/components/StatusNotifications';
 import Header              from '@/components/Header';
 import Footer              from '@/components/Footer';
 
+import RequireAuth from './RequireAuth';   // <‑‑ NOVÉ!
+
 /**
- * Jediný client‑side wrapper, který drží *všechny*
- * kontextové providery + sdílené, stavově závislé UI komponenty.
+ * Vrstva všech kontextů + sdílených UI komponent.
  */
 export default function Providers({ children }) {
   return (
     <AuthProvider>
       <StatusProvider>
-        <Header />                 {/* reaguje na <AuthProvider> */}
-        <main style={{ paddingTop: 64, paddingBottom: 64 }}>
-          {children}
+        <Header />                     {/* reaguje na <AuthProvider> */}
+        <main style={{ padding: '64px 0' }}>
+          {/*  <<<‑‑‑ ochrana všech rout (kromě /auth)  */}
+          <RequireAuth>{children}</RequireAuth>
         </main>
         <Footer />
-        <StatusNotifications />    {/* zobrazuje pending / toasty */}
+        <StatusNotifications />
       </StatusProvider>
     </AuthProvider>
   );

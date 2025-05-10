@@ -1,7 +1,12 @@
-// Next‑app router – root route “/”
 'use client';
+
+import RequireAuth from '@/components/RequireAuth';
 import { HomePage } from '@/features/home';
 
-export default function RootPage() {
-  return <HomePage />;
+export default function HomeRoute() {
+  return (
+    <RequireAuth>
+      <HomePage />
+    </RequireAuth>
+  );
 }
