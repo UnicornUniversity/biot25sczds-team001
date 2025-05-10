@@ -6,7 +6,7 @@ import StatusNotifications from '@/components/StatusNotifications';
 import Header              from '@/components/Header';
 import Footer              from '@/components/Footer';
 
-import RequireAuth from './RequireAuth';   // <‑‑ NOVÉ!
+import RequireAuth from '@/components/RequireAuth';   // <‑‑ NOVÉ!
 
 /**
  * Vrstva všech kontextů + sdílených UI komponent.
