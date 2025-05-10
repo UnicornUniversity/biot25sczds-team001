@@ -1,6 +1,8 @@
 ﻿# Node.js dependencies
 node_modules/
 
+twr-radio-motion-detector/
+
 # Logs
 logs/
 *.log
