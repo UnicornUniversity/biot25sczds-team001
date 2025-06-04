@@ -8,32 +8,37 @@ export async function authFetch(path, opts = {}) {
     ? localStorage.getItem(LS_TOKEN)
     : null;
 
-  console.log('[authFetch] →', path);
-  console.log('[authFetch] opts:', opts);
-  console.log('[authFetch] token:', token);
-
   const headers = {
     'Content-Type': 'application/json',
     ...(opts.headers || {}),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
-  console.log('[authFetch] headers:', headers);
+
+    /* Výpisy pouze v development prostředí
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[authFetch] →', path);
+    console.log('[authFetch] opts:', opts);
+    console.log('[authFetch] headers:', headers);
+  }
+   */
 
   const res = await fetch(`${BASE_URL}${path}`, {
     ...opts,
     headers,
   });
 
-  console.log('[authFetch] status:', res.status);
-
   // vypsat celé tělo odpovědi (JSON nebo text)
-  let text;
+/*
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[authFetch] status:', res.status);
+
   try {
-    text = await res.clone().text();
+    const text = await res.clone().text();
     console.log('[authFetch] body:', text);
   } catch (e) {
     console.log('[authFetch] body parse error', e);
   }
-
+}
+*/
   return res;
 }
