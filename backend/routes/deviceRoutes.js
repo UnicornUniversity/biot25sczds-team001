@@ -6,6 +6,7 @@ const doorDao           = require("../dao/doorDao");
 const authenticateToken = require("../middleware/authTokenValidation");
 const validate          = require("../middleware/validate");
 const Joi               = require("joi");
+const { v4: uuidv4 } = require('uuid');
 
 // --- Validation schemas ---
 const updateSchema = Joi.object({
@@ -15,6 +16,14 @@ const updateSchema = Joi.object({
   description: Joi.string().allow("", null).optional(),
   created:     Joi.boolean().optional(),
 }).min(1);
+
+const adminCreateDeviceSchema = Joi.object({
+  _id:        Joi.string().required(),
+  ownerId:    Joi.string().required(),
+  gatewayId:  Joi.string().required(),
+  name:       Joi.string().required(),
+  adminKey:   Joi.string().required(),
+});
 
 // 1) Templates endpoint
 router.get(
@@ -143,6 +152,39 @@ router.put(
       res.status(400).json({ message: err.message });
     }
   }
+);
+
+// POST /devices/admin-create
+router.post(
+    "/devices/admin-create",
+    validate(adminCreateDeviceSchema),
+    async (req, res) => {
+      try {
+        const { _id, ownerId, gatewayId, name, adminKey } = req.body;
+        if (adminKey !== process.env.ADMIN_KEY) {
+          return res.status(403).json({ message: "Invalid admin key" });
+        }
+
+        // Optionally check if gateway exists and belongs to ownerId
+        const gateway = await gatewayDao.getById(gatewayId);
+        if (!gateway || gateway.ownerId !== ownerId) {
+          return res.status(404).json({ message: "Gateway not found or not owned by user" });
+        }
+
+        const device = await deviceDao.create({
+          _id,
+          ownerId,
+          gatewayId,
+          name,
+          created: false,
+          description: null,
+        });
+
+        res.status(201).json({ message: "Device created", data: device });
+      } catch (err) {
+        res.status(400).json({ message: err.message });
+      }
+    }
 );
 
 module.exports = router;

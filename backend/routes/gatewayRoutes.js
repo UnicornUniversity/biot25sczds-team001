@@ -4,7 +4,8 @@ const gatewayDao          = require("../dao/gatewayDao");
 const authenticateToken   = require("../middleware/authTokenValidation");
 const validate            = require("../middleware/validate");
 const Joi                 = require("joi");
-const deviceDao           = require("../dao/deviceDao");  
+const deviceDao           = require("../dao/deviceDao");
+const { v4: uuidv4 } = require('uuid');  
 
 // --- Validation schemas ---
 const updateGatewaySchema = Joi.object({
@@ -13,6 +14,12 @@ const updateGatewaySchema = Joi.object({
   buildingId:  Joi.string().allow(null),
   created:     Joi.boolean(),
 }).min(1);
+
+const createGatewaySchema = Joi.object({
+    name: Joi.string().required(),
+    ownerId: Joi.string().required(),
+    adminKey: Joi.string().required(),
+});
 
 // 1) Templates endpoint (must come *before* /:id)
 router.get(
@@ -158,6 +165,35 @@ router.get(
       }
     }
   );
+
+// POST /gateways/admin-create
+router.post(
+    "/gateways/admin-create",
+    validate(createGatewaySchema),
+    async (req, res) => {
+        try {
+            const { name, ownerId, adminKey } = req.body;
+
+            if (adminKey !== process.env.ADMIN_KEY) {
+                return res.status(403).json({ message: "Invalid admin key" });
+            }
+
+            const gateway = await gatewayDao.create({
+                _id: uuidv4(),
+                name,
+                ownerId,
+                buildingId: null,
+                description: null,
+                created: false,
+                // createdAt and updatedAt are set by schema defaults
+            });
+
+            res.status(201).json({ message: "Gateway created", data: gateway });
+        } catch (err) {
+            res.status(400).json({ message: err.message });
+        }
+    }
+);
   
 
 module.exports = router;
