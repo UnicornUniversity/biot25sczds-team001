@@ -13,6 +13,7 @@ export default function DoorsPage({ buildingId }) {
     doors,
     userFavs,
     controllers,
+    buildingName,   // <-- nově z hooku
     pageInfo,
     nextPage,
     prevPage,
@@ -41,7 +42,9 @@ export default function DoorsPage({ buildingId }) {
 
   return (
     <main className={styles.page}>
-      <h1 className={styles.title}>Dveře budovy</h1>
+      <h1 className={styles.title}>
+        {buildingName ? `${buildingName}` : 'Dveře budovy'}
+      </h1>
 
       <DoorsList
         doors={doors}
@@ -49,7 +52,7 @@ export default function DoorsPage({ buildingId }) {
         showAdd
         onAdd={() => setAddOpen(true)}
         onEdit={openEdit}
-        onLogs={d => setLogsDoor(d)}
+        onLogs={setLogsDoor}
         onToggleLock={toggleLock}
         onToggleFav={toggleFavourite}
         onChangeState={changeState}
@@ -70,11 +73,7 @@ export default function DoorsPage({ buildingId }) {
         <DoorEditModal
           door={editData.door}
           selectedController={editData.controller}
-          devices={
-            editData.controller
-              ? [editData.controller, ...controllers.filter(c => c._id !== editData.controller._id)]
-              : controllers
-          }
+          devices={controllers}
           onClose={() => setEditData(null)}
           onSubmit={(id, form) => { updateDoor(id, form); setEditData(null); }}
           onDelete={id => { deleteDoor(id); setEditData(null); }}

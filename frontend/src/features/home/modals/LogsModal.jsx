@@ -1,13 +1,14 @@
-'use client';
-
+/*******************************  LogsModal.jsx  ******************************/
 import { createPortal } from 'react-dom';
 import {
-  BiInfoCircle, BiCheckCircle, BiErrorAlt, BiError
+  BiInfoCircle,
+  BiCheckCircle,
+  BiErrorAlt,
+  BiError,
 } from 'react-icons/bi';
+import modalStyles from './LogsModal.module.css';
 
-import styles from './LogsModal.module.css';
-
-const severityMap = {
+const modalSeverityMap = {
   info: {
     Icon: BiInfoCircle,
     color: 'var(--color-info)',
@@ -23,56 +24,72 @@ const severityMap = {
     Icon: BiErrorAlt,
     color: 'var(--color-warning)',
     interpretation:
-      'Upozornění: může dojít k potenciálnímu problému. Zkontrolujte fyzický stav dveří a zařízení.',
+      'Upozornění: může dojít k potenciálnímu problému. Zkontrolujte fyzický stav dveří a zařízení.',
   },
   error: {
     Icon: BiError,
     color: 'var(--color-error)',
     interpretation:
-      'Chyba – možný bezpečnostní incident! Ihned prověřte situaci a případně kontaktujte správce objektu.',
+      'Chyba – možný bezpečnostní incident! Ihned prověřte situaci a případně kontaktujte správce objektu.',
   },
 };
 
-export default function LogsModal({ log, onClose }) {
+function LogsModal({ log, onClose }) {
   if (!log) return null;
 
   const { Icon, color, interpretation } =
-    severityMap[log.severity] || severityMap.info;
+    modalSeverityMap[log.severity] || modalSeverityMap.info;
 
   return createPortal(
-    <div className={styles.overlay} onClick={onClose}>
+    <div className={modalStyles.overlay} onClick={onClose}>
       <div
-        className={styles.modal}
-        onClick={e => e.stopPropagation()}
+        className={modalStyles.modal}
+        onClick={(e) => e.stopPropagation()}
         style={{ borderLeftColor: color }}
       >
-        <header className={styles.header}>
-          <Icon className={styles.icon} style={{ color }} />
-          <h2 className={styles.title}>Interpretace události</h2>
+        <header className={modalStyles.header}>
+          <Icon className={modalStyles.icon} style={{ color }} />
+          <h2 className={modalStyles.title}>Interpretace události</h2>
         </header>
 
-        <div className={styles.body}>
-          <div className={styles.field}>
-            <span className={styles.label}>Zpráva:</span>
-            <span className={styles.value}>{log.message}</span>
+        <div className={modalStyles.body}>
+          <div className={modalStyles.field}>
+            <span className={modalStyles.label}>Zpráva:</span>
+            <span className={modalStyles.value}>{log.message}</span>
           </div>
-          <div className={styles.field}>
-            <span className={styles.label}>Čas události:</span>
-            <span className={styles.value}>
+          <div className={modalStyles.field}>
+            <span className={modalStyles.label}>Čas události:</span>
+            <span className={modalStyles.value}>
               {new Date(log.createdAt).toLocaleString()}
             </span>
           </div>
-          <div className={styles.interpretation}>
-            <span className={styles.label}>Co to znamená:</span>
-            <p className={styles.value}>{interpretation}</p>
+
+          {log.buildingName && (
+            <div className={modalStyles.field}>
+              <span className={modalStyles.label}>Budova:</span>
+              <span className={modalStyles.value}>{log.buildingName}</span>
+            </div>
+          )}
+          {log.doorName && (
+            <div className={modalStyles.field}>
+              <span className={modalStyles.label}>Dveře:</span>
+              <span className={modalStyles.value}>{log.doorName}</span>
+            </div>
+          )}
+
+          <div className={modalStyles.interpretation}>
+            <span className={modalStyles.label}>Co to znamená:</span>
+            <p className={modalStyles.value}>{interpretation}</p>
           </div>
         </div>
 
-        <button className={styles.closeBtn} onClick={onClose}>
+        <button className={modalStyles.closeBtn} onClick={onClose}>
           Zavřít
         </button>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }
+
+export { LogsModal as default };

@@ -75,3 +75,10 @@
 .card[data-state="alert"] .actions button:hover svg {
   color: var(--color-error);
 }
+
+.building {
+  display: block;
+  font-size: 0.8rem;
+  margin-top: 2px;
+  color: white;
+}

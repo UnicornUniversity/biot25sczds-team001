@@ -88,23 +88,36 @@ router.get(
     }
   );
 
-// ─── FETCH CURRENT USER’S FAVOURITE DOORS ────────────────────
-// Must come *before* the "/doors/:id" route
-router.get(
-    "/doors/favourites",
-    auth,
-    async (req, res) => {
-      try {
-        const u = await User.findById(req.user.id);
-        if (!u) return res.status(404).json({ message: "User not found" });
-        const favIds = u.favouriteDoors || [];
-        const favDoors = await Door.find({ _id: { $in: favIds } });
-        return res.json({ message: "Favourites fetched", data: favDoors });
-      } catch (err) {
-        return res.status(500).json({ message: err.message });
-      }
-    }
-  );
+// routes/api/doors.js  (úsek „GET /doors/favourites“)
+router.get('/doors/favourites', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const favIds = user.favouriteDoors || [];
+
+    // doors + lean
+    const doors = await Door.find({ _id: { $in: favIds } }).lean();
+
+    // fetch building names
+    const buildingIds = doors.map(d => d.buildingId);
+    const buildings = await Building
+      .find({ _id: { $in: buildingIds } })
+      .select('name')
+      .lean();
+    const bMap = Object.fromEntries(buildings.map(b => [b._id.toString(), b.name]));
+
+    // enrich
+    const enriched = doors.map(d => ({
+      ...d,
+      buildingName: bMap[d.buildingId?.toString()] || ''
+    }));
+
+    res.json({ message: 'Favourites fetched', data: enriched });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
 
 router.get(
     "/buildings/:buildingId/doors",
@@ -291,6 +304,17 @@ router.post(
   
         // nastavíme nový stav dle požadavku
         const updated = await doorDao.toggleState(doorId, newState);
+        /* --- PUSH přes Socket.IO --- */
+            const io = req.app.get('io');
+            io.emit('door:state', {
+              doorId     : updated._id.toString(),
+              doorName   : updated.name,
+              buildingId : updated.buildingId.toString(),
+              state      : updated.state,
+              locked     : updated.locked,
+              updatedAt  : updated.updatedAt,
+            });
+
         res.json({ message: "State updated", data: updated });
       } catch (err) {
         res.status(400).json({ message: err.message });

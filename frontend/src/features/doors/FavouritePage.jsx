@@ -8,26 +8,20 @@ import useDoors      from './hooks/useDoors';
 import styles        from './DoorsPage.module.css';
 
 export default function FavouritePage() {
-  // passing `null` makes the hook call GET /doors/favourites
   const {
-    doors,                 // only your favourite doors
-    userFavs,              // up-to-date favourite IDs array
-    controllers,           // for the edit modal
-    pageInfo,              // pagination info
-    nextPage,              // pagination controls
+    doors,                 // enriched už obsahuje .buildingName
+    controllers,
+    pageInfo,
+    nextPage,
     prevPage,
     fetchDoorDetail,
     updateDoor,
     deleteDoor,
     toggleLock,
     toggleFavourite,
-    resetState,
     changeState,
     fetchDoorLogs,
-  } = useDoors(null);
-
-  // on this page, `doors` are already filtered to favourites
-  const favDoors = doors;
+  } = useDoors(null); // favourites
 
   const [editData, setEditData] = useState(null);
   const [logsDoor, setLogsDoor] = useState(null);
@@ -46,16 +40,15 @@ export default function FavouritePage() {
       <h1 className={styles.title}>Oblíbené dveře</h1>
 
       <DoorsList
-        doors={favDoors}
-        userFavs={favDoors.map(d => d._id)}  // all hearts filled
+        doors={doors}
+        userFavs={doors.map(d => d._id)}
         showAdd={false}
         onAdd={() => {}}
         onEdit={openEdit}
-        onLogs={d => setLogsDoor(d)}
-        onToggleLock={toggleLock}
+        onLogs={setLogsDoor}
         onToggleFav={toggleFavourite}
+        onToggleLock={toggleLock}
         onChangeState={changeState}
-        // pass pagination controls down into DoorsList
         pageInfo={pageInfo}
         nextPage={nextPage}
         prevPage={prevPage}
@@ -65,11 +58,7 @@ export default function FavouritePage() {
         <DoorEditModal
           door={editData.door}
           selectedController={editData.controller}
-          devices={
-            editData.controller
-              ? [editData.controller, ...controllers.filter(c => c._id !== editData.controller._id)]
-              : controllers
-          }
+          devices={controllers}
           onClose={() => setEditData(null)}
           onDelete={id => { deleteDoor(id); setEditData(null); }}
           onSubmit={(id, data) => { updateDoor(id, data); setEditData(null); }}

@@ -16,6 +16,7 @@ export default function useDoors(buildingId) {
   const [doors,        setDoors]        = useState([]);
   const [userFavs,     setUserFavs]     = useState([]);
   const [controllers,  setControllers]  = useState([]);
+  const [buildingName, setBuildingName] = useState('');
   const [pageInfo,     setPageInfo]     = useState({
     page: 1,
     pageSize: 10,
@@ -23,17 +24,14 @@ export default function useDoors(buildingId) {
     totalPages: 1,
   });
 
-  /* ------------------- real‑time update ze Socket.IO ---------------- */
+  /* ------------------- real-time update ze Socket.IO --------------- */
   useEffect(() => {
     if (!token) return;
-    const socket = initSocket(token);              // singleton
+    const socket = initSocket(token);
 
     const onDoorState = ({ doorId, state, locked, updatedAt }) => {
       setDoors(ds =>
-        ds.map(d => d._id === doorId
-          ? { ...d, state, locked, updatedAt }
-          : d
-        )
+        ds.map(d => d._id === doorId ? { ...d, state, locked, updatedAt } : d)
       );
     };
 
@@ -41,10 +39,26 @@ export default function useDoors(buildingId) {
     return () => socket.off('door:state', onDoorState);
   }, [token]);
 
-  /* ----------------------- seed favourites ------------------------- */
+  /* ----------------------- seed favourites ------------------------ */
   useEffect(() => {
     if (user?.favouriteDoors) setUserFavs(user.favouriteDoors);
   }, [user]);
+
+  /* ----------------- načti název budovy (pokud není null) --------- */
+  const fetchBuildingName = useCallback(async () => {
+    if (!buildingId) { setBuildingName(''); return; }
+    try {
+      const res  = await authFetch(API_ROUTES.buildings.get(buildingId));
+      if (!res.ok) throw new Error(`Status ${res.status}`);
+      const { data } = await res.json();
+      setBuildingName(data?.name || '');
+    } catch (e) {
+      console.error('Nepodařilo se načíst název budovy:', e.message);
+      setBuildingName('');
+    }
+  }, [buildingId]);
+
+ useEffect(() => { fetchBuildingName(); }, [fetchBuildingName]);
 
   // fetch controllers (unassigned)
   const fetchControllers = useCallback(
@@ -291,5 +305,6 @@ const toggleFavourite = useCallback(
     nextPage,
     prevPage,
     changeState,
+    buildingName,
   };
 }
