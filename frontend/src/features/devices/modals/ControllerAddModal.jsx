@@ -30,7 +30,11 @@ export default function ControllerAddModal({ gatewayId, onClose, onSubmit }) {
         const res = await authFetch(`${API_ROUTES.devices.templates}?gatewayId=${gatewayId}`);
         if (!res.ok) throw new Error(`Templates ${res.status}`);
         const { data } = await res.json();
+
+        if (process.env.NODE_ENV === 'development') {
         console.log('Loaded controller templates for gateway', gatewayId, data);
+        }
+
         setTemplates(data);
       } catch (err) {
         console.error('Failed to load controller templates:', err);
